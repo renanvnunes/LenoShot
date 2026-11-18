@@ -1,0 +1,35 @@
+<local:FloatingWindow xmlns="https://github.com/avaloniaui"
+                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                      xmlns:local="using:LenoShot.Scroll"
+                      x:Class="LenoShot.Recording.RecordPanel"
+                      Title="Leno Shot — gravação"
+                      Background="Transparent"
+                      TransparencyLevelHint="Transparent"
+                      ShowActivated="False">
+  <Border Classes="toolbar" Margin="0" Padding="12,6,6,6" BoxShadow="none">
+    <StackPanel Spacing="6" VerticalAlignment="Center">
+    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+      <Ellipse x:Name="Pulse" Width="9" Height="9" Fill="#FF453A" VerticalAlignment="Center" Margin="0,0,10,0" />
+      <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+        <TextBlock x:Name="StatusText" Text="Pronto para gravar" FontSize="13" FontWeight="Light" Foreground="#F5F5F7" />
+        <TextBlock x:Name="DetailText" FontSize="11" Foreground="#8E8E93" />
+      </StackPanel>
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="12,0,0,0">
+        <!-- Antes de gravar -->
+        <Button x:Name="MicButton" Classes="pill" Content="Microfone" MinWidth="0" ToolTip.Tip="Gravar o microfone" />
+        <Button x:Name="SystemButton" Classes="pill" Content="Áudio do PC" MinWidth="0" ToolTip.Tip="Gravar o som que sai do computador" />
+        <Button x:Name="QualityButton" Classes="pill" Content="Original" MinWidth="0" ToolTip.Tip="Qualidade do vídeo: reduz a altura (nunca amplia). Clique para alternar" />
+        <Button x:Name="CancelButton" Classes="pill" Content="Cancelar" MinWidth="0" />
+        <Button x:Name="StartButton" Classes="pill primary" Content="Gravar" MinWidth="0" />
+        <!-- Durante a gravação -->
+        <Button x:Name="ZoomButton" Classes="pill" Content="Zoom" MinWidth="0" IsVisible="False" ToolTip.Tip="Lupa no mouse com o fundo desfocado. A tela fica parada enquanto o zoom está ligado" />
+        <Button x:Name="DrawButton" Classes="pill" Content="Desenhar" MinWidth="0" IsVisible="False" ToolTip.Tip="Congela a área para marcar (setas, retângulos, texto…). Ao sair, a gravação volta ao vivo" />
+        <Button x:Name="PauseButton" Classes="pill" Content="Pausar" MinWidth="0" IsVisible="False" />
+        <Button x:Name="StopButton" Classes="pill primary" Content="Parar" MinWidth="0" IsVisible="False" />
+      </StackPanel>
+    </Grid>
+    <!-- Ferramentas do desenho (só durante o modo desenho) -->
+    <ContentControl x:Name="ToolbarHost" IsVisible="False" HorizontalAlignment="Center" />
+    </StackPanel>
+  </Border>
+</local:FloatingWindow>

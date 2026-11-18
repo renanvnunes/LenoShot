@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:LenoShot.Overlay"
+             x:Class="LenoShot.Overlay.AnnotationToolbar">
+  <Border Classes="toolbar">
+    <StackPanel Orientation="Horizontal" Spacing="2">
+      <!-- Ferramentas -->
+      <Button Classes="tool" x:Name="PenButton" ToolTip.Tip="Caneta  (P)">
+        <local:LineIcon Data="M4 20 L8 19 L19 8 L16 5 L5 16 Z M14 7 L17 10" />
+      </Button>
+      <Button Classes="tool" x:Name="ArrowButton" ToolTip.Tip="Seta  (A)">
+        <local:LineIcon Data="M5 19 L19 5 M10 5 H19 V14" />
+      </Button>
+      <Button Classes="tool" x:Name="RectangleButton" ToolTip.Tip="Retângulo  (R · Shift para quadrado)">
+        <local:LineIcon Data="M4 6 H20 V18 H4 Z" />
+      </Button>
+      <Button Classes="tool" x:Name="EllipseButton" ToolTip.Tip="Círculo  (C · Shift para círculo perfeito)">
+        <local:LineIcon Data="M12 3 A9 9 0 1 1 11.99 3 Z" />
+      </Button>
+      <Button Classes="tool" x:Name="CounterButton" ToolTip.Tip="Marcador numerado  (N)">
+        <local:LineIcon Data="M12 3 A9 9 0 1 1 11.99 3 Z M10 9.5 L12.5 7.5 V16.5" />
+      </Button>
+      <Button Classes="tool" x:Name="MarkerButton" ToolTip.Tip="Marca-texto  (M)">
+        <local:LineIcon Data="M4 21 H20 M8 17 L5 14 L14 5 L19 10 L10 19 Z M8 17 L6 19" />
+      </Button>
+      <Button Classes="tool" x:Name="TextButton" ToolTip.Tip="Texto  (T)">
+        <local:LineIcon Data="M5 7 V4 H19 V7 M12 4 V20 M9 20 H15" />
+      </Button>
+      <Button Classes="tool" x:Name="PixelateButton" ToolTip.Tip="Pixelizar  (B)">
+        <local:LineIcon Data="M4 4 H10 V10 H4 Z M14 4 H20 V10 H14 Z M4 14 H10 V20 H4 Z M14 14 H20 V20 H14 Z" />
+      </Button>
+
+      <Rectangle Classes="divider" />
+
+      <!-- Cores -->
+      <StackPanel x:Name="Swatches" Orientation="Horizontal" Spacing="0" />
+
+      <Rectangle Classes="divider" x:Name="ThicknessDivider" IsVisible="False" />
+      <Slider x:Name="ThicknessSlider" IsVisible="False" Width="84" Minimum="1" Maximum="20"
+              TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+              ToolTip.Tip="Espessura  (roda do mouse também ajusta)" />
+
+      <Rectangle Classes="divider" />
+
+      <Button Classes="tool" x:Name="UndoButton" ToolTip.Tip="Desfazer  (Ctrl+Z)" IsEnabled="False">
+        <local:LineIcon Data="M9 14 L4 9 L9 4 M4 9 H15 A5 5 0 0 1 15 19 H11" />
+      </Button>
+
+      <Button Classes="tool" x:Name="ClearButton" IsVisible="False" ToolTip.Tip="Apagar todas as marcações  (Delete)">
+        <local:LineIcon Data="M5 7 H19 M9 7 V4 H15 V7 M7 7 L8 20 H16 L17 7" />
+      </Button>
+
+      <Rectangle Classes="divider" />
+
+      <Button Classes="tool" x:Name="ScrollButton" ToolTip.Tip="Captura com rolagem  (L)">
+        <local:LineIcon Data="M5 3 H19 M5 21 H19 M12 7 V17 M8.5 13.5 L12 17 L15.5 13.5" />
+      </Button>
+      <Button Classes="tool" x:Name="RecordButton" ToolTip.Tip="Gravar vídeo da área  (V)">
+        <local:LineIcon Data="M3 7 H15 V17 H3 Z M15 11 L21 7 V17 L15 13" />
+      </Button>
+      <Button Classes="tool" x:Name="SaveButton" ToolTip.Tip="Salvar  (Ctrl+S)">
+        <local:LineIcon Data="M12 3 V15 M7 10 L12 15 L17 10 M5 20 H19" />
+      </Button>
+      <Button Classes="tool primary" x:Name="CopyButton" ToolTip.Tip="Copiar  (Ctrl+C / Enter)">
+        <local:LineIcon Data="M9 9 H20 V20 H9 Z M15 9 V4 H4 V15 H9" />
+      </Button>
+      <Button Classes="tool" x:Name="CloseButton" ToolTip.Tip="Cancelar  (Esc)">
+        <local:LineIcon Data="M6 6 L18 18 M18 6 L6 18" />
+      </Button>
+    </StackPanel>
+  </Border>
+</UserControl>

@@ -1,0 +1,23 @@
+<c:ChromeWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:c="using:LenoShot.Controls"
+                xmlns:ov="using:LenoShot.Overlay"
+                x:Class="LenoShot.Editor.EditorWindow"
+                Title="Editar captura"
+                MinWidth="720" MinHeight="420">
+  <c:ChromeWindow.TitleBarContent>
+    <Border Background="#2C2C2E" CornerRadius="6" Padding="8,3">
+      <TextBlock x:Name="SizeText" FontSize="11.5" Foreground="#A1A1A6" />
+    </Border>
+  </c:ChromeWindow.TitleBarContent>
+
+  <Grid RowDefinitions="Auto,*">
+    <ov:AnnotationToolbar x:Name="Toolbar" HorizontalAlignment="Center" Margin="12,0,12,12" />
+
+    <Border Grid.Row="1" Margin="12,0,12,12" CornerRadius="8" ClipToBounds="True" Background="#141416">
+      <ScrollViewer x:Name="Viewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <ov:SelectionCanvas x:Name="Canvas" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,12" />
+      </ScrollViewer>
+    </Border>
+  </Grid>
+</c:ChromeWindow>

@@ -1,0 +1,230 @@
+<c:ChromeWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="using:LenoShot.Controls"
+        x:Class="LenoShot.Settings.SettingsWindow"
+        Title="Configurações"
+        Width="560" Height="680" MinWidth="480" MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        ShowMaximizeButton="False">
+
+  <c:ChromeWindow.Styles>
+    <Style Selector="TextBlock.h1">
+      <Setter Property="FontSize" Value="20" />
+      <Setter Property="FontWeight" Value="Normal" />
+      <Setter Property="Foreground" Value="#F5F5F7" />
+    </Style>
+    <Style Selector="TextBlock.subtitle">
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="Foreground" Value="#8E8E93" />
+    </Style>
+    <Style Selector="TextBlock.section">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="Normal" />
+      <Setter Property="Foreground" Value="#8E8E93" />
+      <Setter Property="Margin" Value="12,0,0,6" />
+    </Style>
+    <Style Selector="Border.group">
+      <Setter Property="Background" Value="#2C2C2E" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="BorderBrush" Value="#14FFFFFF" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Grid.row">
+      <Setter Property="Margin" Value="14,10" />
+      <Setter Property="MinHeight" Value="36" />
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="13.5" />
+      <Setter Property="Foreground" Value="#F5F5F7" />
+    </Style>
+    <Style Selector="TextBlock.hint">
+      <Setter Property="FontSize" Value="11.5" />
+      <Setter Property="Foreground" Value="#8E8E93" />
+      <Setter Property="Margin" Value="0,2,0,0" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style Selector="Rectangle.sep">
+      <Setter Property="Height" Value="1" />
+      <Setter Property="Fill" Value="#14FFFFFF" />
+      <Setter Property="Margin" Value="14,0,0,0" />
+    </Style>
+    <Style Selector="Button.pill">
+      <Setter Property="FontWeight" Value="Light" />
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="Padding" Value="12,5" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Background" Value="#3A3A3C" />
+      <Setter Property="Foreground" Value="#F5F5F7" />
+      <Setter Property="MinWidth" Value="90" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.pill:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#48484A" />
+      <Setter Property="Foreground" Value="#F5F5F7" />
+    </Style>
+    <Style Selector="Button.pill.recording">
+      <Setter Property="Background" Value="#6E7BFF" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.pill.recording:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#8590FF" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="ToggleSwitch">
+      <Setter Property="OnContent" Value="" />
+      <Setter Property="OffContent" Value="" />
+      <Setter Property="MinWidth" Value="0" />
+    </Style>
+  </c:ChromeWindow.Styles>
+
+  <ScrollViewer>
+    <StackPanel Margin="24,6,24,28" Spacing="22">
+
+      <!-- Cabeçalho -->
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="14">
+          <Image x:Name="AppIconImage" Width="44" Height="44" />
+          <StackPanel VerticalAlignment="Center" Spacing="2">
+            <TextBlock Classes="h1" Text="Leno Shot" />
+            <TextBlock Classes="subtitle" x:Name="SubtitleText" Text="Configurações" />
+          </StackPanel>
+        </StackPanel>
+        <Button Grid.Column="1" Classes="pill" x:Name="AboutButton" Content="Sobre" VerticalAlignment="Center" />
+      </Grid>
+
+      <!-- Captura -->
+      <StackPanel>
+        <TextBlock Classes="section" Text="CAPTURA" />
+        <Border Classes="group">
+          <StackPanel>
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Classes="label" Text="Atalho de captura" />
+                <TextBlock Classes="hint" x:Name="ShortcutHint" Text="Clique e pressione a nova combinação de teclas" />
+              </StackPanel>
+              <Button Grid.Column="1" Classes="pill" x:Name="ShortcutButton" Content="…" VerticalAlignment="Center" />
+            </Grid>
+            <Rectangle Classes="sep" />
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Classes="label" Text="Atraso do atalho" />
+                <TextBlock Classes="hint" Text="Espera antes de capturar, para abrir menus ou tooltips. Também há atalho pela bandeja." />
+              </StackPanel>
+              <ComboBox Grid.Column="1" x:Name="DelayCombo" MinWidth="110" VerticalAlignment="Center">
+                <ComboBoxItem Content="Imediato" />
+                <ComboBoxItem Content="3 segundos" />
+                <ComboBoxItem Content="5 segundos" />
+                <ComboBoxItem Content="10 segundos" />
+              </ComboBox>
+            </Grid>
+            <Rectangle Classes="sep" />
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Classes="label" Text="Iniciar com o sistema" />
+                <TextBlock Classes="hint" Text="Deixa o Leno Shot pronto na bandeja ao entrar na sessão" />
+              </StackPanel>
+              <ToggleSwitch Grid.Column="1" x:Name="AutostartToggle" VerticalAlignment="Center" />
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- Salvar -->
+      <StackPanel>
+        <TextBlock Classes="section" Text="SALVAR E COPIAR" />
+        <Border Classes="group">
+          <StackPanel>
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                <TextBlock Classes="label" Text="Pasta de destino" />
+                <TextBlock Classes="hint" x:Name="FolderText" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+              </StackPanel>
+              <Button Grid.Column="1" Classes="pill" x:Name="FolderButton" Content="Alterar…" VerticalAlignment="Center" />
+            </Grid>
+            <Rectangle Classes="sep" />
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <TextBlock Classes="label" Text="Notificar ao salvar" VerticalAlignment="Center" />
+              <ToggleSwitch Grid.Column="1" x:Name="NotifySaveToggle" VerticalAlignment="Center" />
+            </Grid>
+            <Rectangle Classes="sep" />
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <TextBlock Classes="label" Text="Notificar ao copiar" VerticalAlignment="Center" />
+              <ToggleSwitch Grid.Column="1" x:Name="NotifyCopyToggle" VerticalAlignment="Center" />
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- Vídeo -->
+      <StackPanel>
+        <TextBlock Classes="section" Text="GRAVAÇÃO DE TELA" />
+        <Border Classes="group">
+          <StackPanel>
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                <TextBlock Classes="label" Text="Pasta dos vídeos" />
+                <TextBlock Classes="hint" x:Name="VideoFolderText" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+              </StackPanel>
+              <Button Grid.Column="1" Classes="pill" x:Name="VideoFolderButton" Content="Alterar…" VerticalAlignment="Center" />
+            </Grid>
+            <Rectangle Classes="sep" />
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Classes="label" Text="Quadros por segundo" />
+                <TextBlock Classes="hint" Text="Microfone e áudio do PC são escolhidos no painel ao gravar. Requer o ffmpeg." />
+              </StackPanel>
+              <ComboBox Grid.Column="1" x:Name="FpsCombo" MinWidth="110" VerticalAlignment="Center">
+                <ComboBoxItem Content="15 fps" />
+                <ComboBoxItem Content="24 fps" />
+                <ComboBoxItem Content="30 fps" />
+                <ComboBoxItem Content="60 fps" />
+              </ComboBox>
+            </Grid>
+            <Rectangle Classes="sep" />
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                <TextBlock Classes="label" Text="Atalho do zoom na gravação" />
+                <TextBlock Classes="hint" x:Name="ZoomShortcutHint" Text="Lupa no mouse com o fundo desfocado. Clique e pressione a combinação de teclas" />
+              </StackPanel>
+              <Button Grid.Column="1" Classes="pill" x:Name="ZoomShortcutButton" Content="…" VerticalAlignment="Center" />
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- Anotações -->
+      <StackPanel>
+        <TextBlock Classes="section" Text="ANOTAÇÕES" />
+        <Border Classes="group">
+          <StackPanel>
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <TextBlock Classes="label" Text="Cor padrão" VerticalAlignment="Center" />
+              <StackPanel Grid.Column="1" x:Name="ColorSwatches" Orientation="Horizontal" VerticalAlignment="Center" />
+            </Grid>
+            <Rectangle Classes="sep" />
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Classes="label" Text="Espessura padrão" />
+                <TextBlock Classes="hint" Text="Durante a captura, ajuste com a roda do mouse" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Slider x:Name="ThicknessSlider" Width="150" Minimum="1" Maximum="20"
+                        TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+                <TextBlock x:Name="ThicknessText" Classes="label" Width="22" TextAlignment="Right" VerticalAlignment="Center" />
+              </StackPanel>
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- Atalhos dentro da captura -->
+      <StackPanel>
+        <TextBlock Classes="section" Text="ATALHOS DURANTE A CAPTURA" />
+        <Border Classes="group" Padding="14,12">
+          <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" x:Name="KeysGrid" />
+        </Border>
+      </StackPanel>
+
+    </StackPanel>
+  </ScrollViewer>
+</c:ChromeWindow>

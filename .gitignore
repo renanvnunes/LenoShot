@@ -1,0 +1,17 @@
+# Build
+bin/
+obj/
+publish/
+dist/
+
+# IDE / local
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db

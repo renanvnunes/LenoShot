@@ -1,0 +1,143 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <Styles.Resources>
+    <SolidColorBrush x:Key="Accent" Color="#6E7BFF" />
+    <SolidColorBrush x:Key="ToolbarBackground" Color="#E6202024" />
+    <SolidColorBrush x:Key="ToolbarBorder" Color="#26FFFFFF" />
+  </Styles.Resources>
+
+  <!-- Barra flutuante -->
+  <Style Selector="Border.toolbar">
+    <Setter Property="Background" Value="{StaticResource ToolbarBackground}" />
+    <Setter Property="BorderBrush" Value="{StaticResource ToolbarBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="Padding" Value="5" />
+    <Setter Property="BoxShadow" Value="0 10 30 0 #73000000" />
+  </Style>
+
+  <!-- Botões de ferramenta -->
+  <Style Selector="Button.tool">
+    <Setter Property="Width" Value="34" />
+    <Setter Property="Height" Value="34" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="#EDEDF0" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.tool /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.tool:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="#1FFFFFFF" />
+    <Setter Property="Foreground" Value="White" />
+  </Style>
+  <Style Selector="Button.tool:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="#33FFFFFF" />
+  </Style>
+
+  <Style Selector="Button.tool.primary">
+    <Setter Property="Background" Value="{StaticResource Accent}" />
+    <Setter Property="Foreground" Value="White" />
+  </Style>
+  <Style Selector="Button.tool.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="#8590FF" />
+  </Style>
+
+  <!-- Ferramenta ativa -->
+  <Style Selector="Button.tool.selected">
+    <Setter Property="Background" Value="#2E6E7BFF" />
+    <Setter Property="Foreground" Value="#A9B1FF" />
+  </Style>
+  <Style Selector="Button.tool.selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="#406E7BFF" />
+  </Style>
+  <Style Selector="Button.tool:disabled /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="#59EDEDF0" />
+  </Style>
+
+  <!-- Amostras de cor -->
+  <Style Selector="Button.swatch">
+    <Setter Property="Width" Value="26" />
+    <Setter Property="Height" Value="34" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.swatch:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Button.swatch Border.ring">
+    <Setter Property="Width" Value="22" />
+    <Setter Property="Height" Value="22" />
+    <Setter Property="CornerRadius" Value="11" />
+    <Setter Property="BorderThickness" Value="2" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+  </Style>
+  <Style Selector="Button.swatch:pointerover Border.ring">
+    <Setter Property="BorderBrush" Value="#40FFFFFF" />
+  </Style>
+  <Style Selector="Button.swatch.selected Border.ring">
+    <Setter Property="BorderBrush" Value="#E6FFFFFF" />
+  </Style>
+  <Style Selector="Button.swatch Ellipse">
+    <Setter Property="Width" Value="14" />
+    <Setter Property="Height" Value="14" />
+    <Setter Property="Stroke" Value="#33FFFFFF" />
+    <Setter Property="StrokeThickness" Value="1" />
+  </Style>
+
+  <!-- Botões em pílula -->
+  <!-- Tipografia fina, estilo macOS (títulos sobem o peso com classes próprias) -->
+  <Style Selector="TextBlock">
+    <Setter Property="FontWeight" Value="Light" />
+  </Style>
+  <Style Selector="ComboBox, ComboBoxItem, ToggleSwitch">
+    <Setter Property="FontWeight" Value="Light" />
+  </Style>
+
+  <!-- Dicas (tooltips) discretas -->
+  <Style Selector="ToolTip">
+    <Setter Property="FontWeight" Value="Light" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+
+  <Style Selector="Button.pill">
+    <Setter Property="CornerRadius" Value="7" />
+    <Setter Property="Padding" Value="12,5" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="Light" />
+    <Setter Property="Background" Value="#3A3A3C" />
+    <Setter Property="Foreground" Value="#F5F5F7" />
+    <Setter Property="MinWidth" Value="80" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.pill:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="#48484A" />
+    <Setter Property="Foreground" Value="#F5F5F7" />
+  </Style>
+  <Style Selector="Button.pill.primary">
+    <Setter Property="Background" Value="{StaticResource Accent}" />
+    <Setter Property="Foreground" Value="White" />
+  </Style>
+  <Style Selector="Button.pill.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="#8590FF" />
+    <Setter Property="Foreground" Value="White" />
+  </Style>
+
+  <Style Selector="Rectangle.divider">
+    <Setter Property="Width" Value="1" />
+    <Setter Property="Height" Value="20" />
+    <Setter Property="Margin" Value="4,0" />
+    <Setter Property="Fill" Value="#26FFFFFF" />
+  </Style>
+</Styles>

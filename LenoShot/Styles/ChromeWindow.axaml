@@ -1,0 +1,91 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:c="using:LenoShot.Controls">
+
+  <!-- Botões da barra de título: ícones de traço fino, em cinza -->
+  <ControlTheme x:Key="TitleBarButton" TargetType="Button">
+    <Setter Property="Width" Value="34" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Focusable" Value="False" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="#A1A1A6" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="7">
+          <Path Data="{TemplateBinding Tag}" Stroke="{TemplateBinding Foreground}" StrokeThickness="1.3"
+                StrokeLineCap="Round" StrokeJoin="Round" Width="10" Height="10" Stretch="None"
+                HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover">
+      <Setter Property="Background" Value="#2C2C2E" />
+      <Setter Property="Foreground" Value="#F5F5F7" />
+    </Style>
+    <Style Selector="^:pressed">
+      <Setter Property="Background" Value="#3A3A3C" />
+    </Style>
+  </ControlTheme>
+
+  <ControlTheme x:Key="ChromeWindowTheme" TargetType="c:ChromeWindow">
+    <Setter Property="Foreground" Value="#F5F5F7" />
+    <!-- Tipografia fina, estilo macOS: texto em Light, títulos em Medium -->
+    <Setter Property="FontWeight" Value="Light" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Panel>
+          <Border x:Name="PART_Frame"
+                  Background="#1C1C1E"
+                  BorderThickness="0"
+                  CornerRadius="12" ClipToBounds="True">
+            <Grid RowDefinitions="Auto,*">
+              <!-- Barra de título -->
+              <Grid x:Name="PART_TitleBar" Height="40" Background="Transparent"
+                    ColumnDefinitions="Auto,*,Auto">
+                <TextBlock Grid.ColumnSpan="3" Text="{TemplateBinding Title}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           FontSize="13" FontWeight="Normal" Foreground="#E5E5EA"
+                           IsHitTestVisible="False" />
+                <ContentPresenter Grid.Column="0" Content="{TemplateBinding TitleBarContent}"
+                                  VerticalAlignment="Center" Margin="16,0,0,0" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2"
+                            Margin="0,0,8,0" VerticalAlignment="Center">
+                  <Button x:Name="PART_Minimize" Theme="{StaticResource TitleBarButton}"
+                          Tag="M1 5 L9 5" ToolTip.Tip="Minimizar" />
+                  <Button x:Name="PART_Maximize" Theme="{StaticResource TitleBarButton}"
+                          Tag="M1.5 1.5 H8.5 V8.5 H1.5 Z" ToolTip.Tip="Maximizar"
+                          IsVisible="{TemplateBinding ShowMaximizeButton}" />
+                  <Button x:Name="PART_Close" Theme="{StaticResource TitleBarButton}"
+                          Tag="M1 1 L9 9 M9 1 L1 9" ToolTip.Tip="Fechar" />
+                </StackPanel>
+              </Grid>
+
+              <VisualLayerManager Grid.Row="1">
+                <ContentPresenter x:Name="PART_ContentPresenter"
+                                  Content="{TemplateBinding Content}"
+                                  ContentTemplate="{TemplateBinding ContentTemplate}" />
+              </VisualLayerManager>
+            </Grid>
+          </Border>
+
+          <!-- Alças de redimensionamento (invisíveis) -->
+          <Border x:Name="PART_GripN" Height="5" VerticalAlignment="Top" Margin="12,0" Background="Transparent" Cursor="TopSide" />
+          <Border x:Name="PART_GripS" Height="5" VerticalAlignment="Bottom" Margin="12,0" Background="Transparent" Cursor="BottomSide" />
+          <Border x:Name="PART_GripW" Width="5" HorizontalAlignment="Left" Margin="0,12" Background="Transparent" Cursor="LeftSide" />
+          <Border x:Name="PART_GripE" Width="5" HorizontalAlignment="Right" Margin="0,12" Background="Transparent" Cursor="RightSide" />
+          <Border x:Name="PART_GripNW" Width="12" Height="12" HorizontalAlignment="Left" VerticalAlignment="Top" Background="Transparent" Cursor="TopLeftCorner" />
+          <Border x:Name="PART_GripNE" Width="12" Height="12" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" Cursor="TopRightCorner" />
+          <Border x:Name="PART_GripSW" Width="12" Height="12" HorizontalAlignment="Left" VerticalAlignment="Bottom" Background="Transparent" Cursor="BottomLeftCorner" />
+          <Border x:Name="PART_GripSE" Width="12" Height="12" HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="Transparent" Cursor="BottomRightCorner" />
+        </Panel>
+      </ControlTemplate>
+    </Setter>
+
+    <Style Selector="^[WindowState=Maximized] /template/ Border#PART_Frame">
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+  </ControlTheme>
+</ResourceDictionary>

@@ -1,0 +1,16 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:LenoShot.Overlay"
+        x:Class="LenoShot.Overlay.OverlayWindow"
+        Title="Leno Shot"
+        WindowDecorations="None"
+        ShowInTaskbar="False"
+        Topmost="True"
+        Background="Black"
+        Cursor="Cross">
+  <Canvas>
+    <local:SelectionCanvas x:Name="Selection" />
+
+    <local:AnnotationToolbar x:Name="Toolbar" IsVisible="False" Cursor="Arrow" />
+  </Canvas>
+</Window>
