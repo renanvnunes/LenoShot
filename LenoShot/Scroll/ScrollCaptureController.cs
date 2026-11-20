@@ -40,7 +40,7 @@ public sealed class ScrollCaptureController
             await Task.Delay(450); // espera a sobreposição sumir e a moldura aparecer antes da 1ª captura
 
             var area = _request.Area;
-            X11Input.MovePointer(new PixelPoint(area.X + area.Width / 2, area.Y + area.Height / 2));
+            PointerInput.MovePointer(new PixelPoint(area.X + area.Width / 2, area.Y + area.Height / 2));
 
             // A tela muda logo depois que a sobreposição fecha (foco volta para a página, que
             // se redesenha). Só aceita o 1º quadro quando ele se mantém igual por um tempo.
@@ -62,9 +62,9 @@ public sealed class ScrollCaptureController
 
             while (!_stop)
             {
-                var pointerInside = area.Contains(X11Input.GetPointer());
+                var pointerInside = area.Contains(PointerInput.GetPointer());
                 if (pointerInside)
-                    X11Input.Scroll(clicks);
+                    PointerInput.Scroll(clicks);
 
                 await Task.Delay(pointerInside ? 180 : 250);
                 if (_stop)
@@ -139,10 +139,10 @@ public sealed class ScrollCaptureController
     {
         // Se o painel teve de ficar sobre a área, some durante a captura
         if (!_panelOverlapsArea)
-            return X11Capture.CaptureRect(_request.Area);
+            return ScreenCapture.CaptureRect(_request.Area);
 
         _panel.Opacity = 0;
-        try { return X11Capture.CaptureRect(_request.Area); }
+        try { return ScreenCapture.CaptureRect(_request.Area); }
         finally { _panel.Opacity = 1; }
     }
 

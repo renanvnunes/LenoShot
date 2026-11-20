@@ -4,7 +4,10 @@ using Avalonia.Input;
 
 namespace LenoShot.Services;
 
-/// <summary>Converte teclas do Avalonia para o formato de atalho do GNOME e para texto legível.</summary>
+/// <summary>
+/// Converte teclas do Avalonia para o formato de atalho do GNOME e para texto legível.
+/// O mesmo formato é usado para guardar os atalhos no Windows.
+/// </summary>
 public static partial class ShortcutFormat
 {
     /// <summary>
@@ -36,19 +39,27 @@ public static partial class ShortcutFormat
         if (string.IsNullOrEmpty(accelerator))
             return "Nenhum";
 
-        var parts = ModifierRegex().Matches(accelerator)
-            .Select(m => m.Groups[1].Value switch
+        var (modifiers, key) = Parse(accelerator);
+        var parts = modifiers
+            .Select(m => m switch
             {
                 "Control" or "Primary" or "Ctrl" => "Ctrl",
-                "Super" => "Super",
+                "Super" => SuperName,
                 var other => other,
             })
             .ToList();
 
-        var key = ModifierRegex().Replace(accelerator, "");
         parts.Add(key.Length == 1 ? key.ToUpperInvariant() : key);
         return string.Join(" + ", parts);
     }
+
+    /// <summary>Nome da tecla Super para o usuário ("Win" no Windows).</summary>
+    public static string SuperName => OperatingSystem.IsWindows() ? "Win" : "Super";
+
+    /// <summary>"&lt;Control&gt;&lt;Shift&gt;s" → (["Control", "Shift"], "s").</summary>
+    public static (List<string> Modifiers, string Key) Parse(string accelerator) =>
+        (ModifierRegex().Matches(accelerator).Select(m => m.Groups[1].Value).ToList(),
+         ModifierRegex().Replace(accelerator, ""));
 
     private static string? KeyName(Key key) => key switch
     {

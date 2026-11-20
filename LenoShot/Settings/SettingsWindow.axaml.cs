@@ -224,10 +224,17 @@ public partial class SettingsWindow : ChromeWindow
         _recordingSlot = slot;
         ButtonFor(slot).Classes.Add("recording");
         ButtonFor(slot).Content = "Pressione…";
-        HintFor(slot).Text = "Esc cancela. Use Ctrl/Alt/Super + tecla, F1–F24 ou Print.";
+        HintFor(slot).Text = $"Esc cancela. Use Ctrl/Alt/{ShortcutFormat.SuperName} + tecla, F1–F24 ou Print.";
 
-        // Desliga o atalho atual enquanto grava, senão o GNOME o intercepta e dispara a ação
+        // Desliga o atalho atual enquanto grava, senão o sistema o intercepta e dispara a ação
         await SystemIntegration.SetShortcutAsync("", slot);
+
+        // No Windows a tecla Print Screen não chega à janela: o app a recebe à parte
+        SystemIntegration.ListenPrintScreen(async accelerator =>
+        {
+            if (_recordingSlot == slot)
+                await StopRecordingAsync(accelerator);
+        });
     }
 
     private async Task StopRecordingAsync(string? newShortcut)
@@ -236,13 +243,28 @@ public partial class SettingsWindow : ChromeWindow
             return;
         _recordingSlot = null;
         ButtonFor(slot).Classes.Remove("recording");
+        SystemIntegration.ListenPrintScreen(null);
 
+        string? hint = null;
         if (newShortcut is not null)
-            _shortcuts[slot] = newShortcut;
+        {
+            if (await SystemIntegration.SetShortcutAsync(newShortcut, slot))
+            {
+                _shortcuts[slot] = newShortcut;
+                SystemIntegration.SaveShortcut(newShortcut, slot);
+            }
+            else
+            {
+                // Recusado (outro programa já usa a combinação): volta ao atalho anterior
+                hint = $"{ShortcutFormat.ToDisplay(newShortcut)} já está em uso por outro programa. Tente outra combinação.";
+                newShortcut = null;
+            }
+        }
 
-        await SystemIntegration.SetShortcutAsync(_shortcuts.GetValueOrDefault(slot) ?? "", slot);
+        if (newShortcut is null)
+            await SystemIntegration.SetShortcutAsync(_shortcuts.GetValueOrDefault(slot) ?? "", slot);
         ButtonFor(slot).Content = ShortcutFormat.ToDisplay(_shortcuts.GetValueOrDefault(slot));
-        HintFor(slot).Text = HintText(slot);
+        HintFor(slot).Text = hint ?? HintText(slot);
     }
 
     protected override async void OnKeyDown(KeyEventArgs e)
@@ -268,7 +290,7 @@ public partial class SettingsWindow : ChromeWindow
         var accelerator = ShortcutFormat.ToAccelerator(e.Key, e.KeyModifiers);
         if (accelerator is null)
         {
-            HintFor(_recordingSlot!.Value).Text = "Essa combinação não pode ser usada. Tente com Ctrl, Alt ou Super.";
+            HintFor(_recordingSlot!.Value).Text = $"Essa combinação não pode ser usada. Tente com Ctrl, Alt ou {ShortcutFormat.SuperName}.";
             return;
         }
 

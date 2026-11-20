@@ -55,7 +55,7 @@ public partial class RecordPanel : FloatingWindow
             if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
                 return;
             _dragging = true;
-            _dragPointerStart = X11Input.GetPointer();
+            _dragPointerStart = PointerInput.GetPointer();
             _dragWindowStart = CurrentRect.Position;
             e.Pointer.Capture(this);
         });
@@ -63,7 +63,7 @@ public partial class RecordPanel : FloatingWindow
         {
             if (!_dragging)
                 return;
-            var pointer = X11Input.GetPointer();
+            var pointer = PointerInput.GetPointer();
             MoveTo(_dragWindowStart + (pointer - _dragPointerStart));
         });
         AddHandler(PointerReleasedEvent, (_, e) =>
