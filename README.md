@@ -1,6 +1,6 @@
-# Leno Shot
+# LenoShot
 
-Captura de tela minimalista para Linux (X11). Selecione uma área, anote na hora e copie, salve ou grave em vídeo — tudo em uma única sobreposição, sem abrir um editor separado.
+Captura de tela minimalista para Linux (X11) e Windows. Selecione uma área, anote na hora e copie, salve ou grave em vídeo — tudo em uma única sobreposição, sem abrir um editor separado.
 
 Feito com [Avalonia](https://avaloniaui.net/) e .NET 10, compilado com Native AOT (inicia rápido e usa pouca memória).
 
@@ -36,7 +36,7 @@ Gere o pacote `.deb` e instale:
 
 ```bash
 packaging/build-deb.sh
-sudo apt install ./dist/leno-shot_*_amd64.deb
+sudo apt install ./dist/lenoshot_*_amd64.deb
 ```
 
 Dependências principais: `ffmpeg` e `pulseaudio-utils` (gravação), além de bibliotecas X11 (`libx11-6`, `libxtst6`, `libxinerama1`, ...), todas instaladas pelo `apt`.
@@ -44,14 +44,14 @@ Dependências principais: `ffmpeg` e `pulseaudio-utils` (gravação), além de b
 ## Uso pela linha de comando
 
 ```bash
-leno-shot capture             # captura uma área
-leno-shot capture --delay 5   # captura após 5 segundos
-leno-shot settings            # abre as configurações
-leno-shot about               # abre a tela Sobre
-leno-shot quit                # encerra o app
+LenoShot capture             # captura uma área
+LenoShot capture --delay 5   # captura após 5 segundos
+LenoShot settings            # abre as configurações
+LenoShot about               # abre a tela Sobre
+LenoShot quit                # encerra o app
 ```
 
-Se o Leno Shot já estiver rodando, o comando é repassado à instância existente.
+Se o LenoShot já estiver rodando, o comando é repassado à instância existente.
 
 ## Desenvolvimento
 

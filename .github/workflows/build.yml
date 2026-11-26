@@ -1,0 +1,83 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  deb:
+    name: Linux (.deb)
+    # 22.04 = glibc mais antigo, o binário roda em mais distribuições
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # Native AOT precisa de clang e zlib para linkar
+      - name: Dependências de build
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      - name: Gerar .deb
+        run: packaging/build-deb.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LenoShot-deb
+          path: dist/*.deb
+          if-no-files-found: error
+
+  windows:
+    name: Windows (installer .exe)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publicar (Native AOT)
+        shell: bash
+        run: |
+          VERSION="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' LenoShot/LenoShot.csproj)"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          dotnet publish LenoShot/LenoShot.csproj -c Release -r win-x64 -o dist/publish --nologo
+
+      - name: Instalar Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Gerar instalador
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=${env:VERSION}" "/DSourceDir=$PWD\dist\publish" packaging\windows\LenoShot.iss
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LenoShot-windows
+          path: dist/*-setup.exe
+          if-no-files-found: error
+
+  release:
+    name: Publicar release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [deb, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: artifacts/*

@@ -3,7 +3,7 @@
                       xmlns:local="using:LenoShot.Scroll"
                       xmlns:ov="using:LenoShot.Overlay"
                       x:Class="LenoShot.Scroll.ScrollPanel"
-                      Title="Leno Shot — rolagem"
+                      Title="LenoShot — rolagem"
                       Background="Transparent"
                       TransparencyLevelHint="Transparent"
                       ShowActivated="False">

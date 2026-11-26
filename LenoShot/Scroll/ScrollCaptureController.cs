@@ -164,7 +164,7 @@ public sealed class ScrollCaptureController
         ];
         foreach (var side in sides)
         {
-            var w = new FloatingWindow { Background = accent, ShowActivated = false, Title = "Leno Shot — moldura" };
+            var w = new FloatingWindow { Background = accent, ShowActivated = false, Title = "LenoShot — moldura" };
             w.PlaceAt(side, _request.Scaling);
             w.Show();
             _frame.Add(w);

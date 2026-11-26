@@ -42,7 +42,7 @@ public sealed class ZoomWindow : FloatingWindow
         _area = area;
         _scaling = scaling;
 
-        Title = "Leno Shot — zoom";
+        Title = "LenoShot — zoom";
         Background = Brushes.Black;
         ShowActivated = false;
 

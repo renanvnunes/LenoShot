@@ -138,7 +138,7 @@ public sealed class RecordController
                 Background = accent,
                 TransparencyLevelHint = [WindowTransparencyLevel.Transparent],
                 ShowActivated = false,
-                Title = "Leno Shot — moldura",
+                Title = "LenoShot — moldura",
             };
             w.UseOverrideRedirect(); // sem isso o GNOME empurra a faixa para dentro da área
             w.PlaceAt(side, _request.Scaling);

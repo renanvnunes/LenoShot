@@ -5,7 +5,7 @@
   <Application.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
-        <ResourceInclude Source="avares://leno-shot/Styles/ChromeWindow.axaml" />
+        <ResourceInclude Source="avares://LenoShot/Styles/ChromeWindow.axaml" />
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </Application.Resources>
@@ -16,6 +16,6 @@
         <ColorPaletteResources x:Key="Dark" Accent="#6E7BFF" />
       </FluentTheme.Palettes>
     </FluentTheme>
-    <StyleInclude Source="avares://leno-shot/Styles/Theme.axaml" />
+    <StyleInclude Source="avares://LenoShot/Styles/Theme.axaml" />
   </Application.Styles>
 </Application>

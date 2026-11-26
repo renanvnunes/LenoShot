@@ -25,7 +25,7 @@ public sealed class ScreenRecorder
     private readonly int _fps;
     private readonly bool _mic;
     private readonly bool _system;
-    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), $"leno-shot-rec-{Guid.NewGuid():N}");
+    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), $"LenoShot-rec-{Guid.NewGuid():N}");
     private readonly List<string> _segments = [];
     private readonly Stopwatch _clock = new();
     private readonly StringBuilder _log = new();
@@ -147,7 +147,7 @@ public sealed class ScreenRecorder
 
             var dir = AppSettings.Current.VideoFolder;
             Directory.CreateDirectory(dir);
-            var output = Path.Combine(dir, $"leno-shot_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.{Extension(Format)}");
+            var output = Path.Combine(dir, $"LenoShot_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.{Extension(Format)}");
 
             var list = Path.Combine(_tempDir, "list.txt");
             await File.WriteAllLinesAsync(list, valid.Select(f => $"file '{f.Replace("'", "'\\''")}'"));
@@ -285,7 +285,7 @@ public sealed class ScreenRecorder
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[leno-shot] erro ao parar a gravação: {ex.Message}");
+            Console.Error.WriteLine($"[LenoShot] erro ao parar a gravação: {ex.Message}");
             try { if (!process.HasExited) process.Kill(); } catch { /* já encerrou */ }
         }
         finally
@@ -384,7 +384,7 @@ public sealed class ScreenRecorder
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[leno-shot] não foi possível limpar {_tempDir}: {ex.Message}");
+            Console.Error.WriteLine($"[LenoShot] não foi possível limpar {_tempDir}: {ex.Message}");
         }
     }
 }

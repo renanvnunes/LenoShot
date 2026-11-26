@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyName>leno-shot</AssemblyName>
+    <AssemblyName>LenoShot</AssemblyName>
     <RootNamespace>LenoShot</RootNamespace>
     <Version>0.6.0</Version>
     <Authors>Renan Nunes</Authors>
