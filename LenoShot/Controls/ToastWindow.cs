@@ -13,7 +13,7 @@ namespace LenoShot.Controls;
 
 /// <summary>
 /// Aviso discreto no canto inferior direito da tela, no visual do app. Usado no Windows, onde não há
-/// notify-send. Some sozinho; clicar fecha (e, se for uma captura salva, mostra o arquivo no Explorer).
+/// notify-send. Some sozinho; clicar fecha (e, se houver um arquivo salvo, mostra ele no Explorer).
 /// </summary>
 public sealed class ToastWindow : FloatingWindow
 {
@@ -25,11 +25,11 @@ public sealed class ToastWindow : FloatingWindow
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(3.5) };
     private Bitmap? _thumbnail;
 
-    public static void Show(string title, string body, string? imagePath)
+    public static void Show(string title, string body, string? imagePath, string? revealPath = null)
     {
         // Um aviso por vez: o novo substitui o anterior
         s_current?.Close();
-        var toast = new ToastWindow(title, body, imagePath);
+        var toast = new ToastWindow(title, body, imagePath, revealPath);
         s_current = toast;
         toast.Closed += (_, _) =>
         {
@@ -39,7 +39,7 @@ public sealed class ToastWindow : FloatingWindow
         toast.Open();
     }
 
-    private ToastWindow(string title, string body, string? imagePath)
+    private ToastWindow(string title, string body, string? imagePath, string? revealPath)
     {
         Title = "LenoShot — aviso";
         Background = Brushes.Transparent;
@@ -96,15 +96,15 @@ public sealed class ToastWindow : FloatingWindow
             Child = row,
         };
 
-        if (imagePath is not null)
+        if (revealPath is not null)
         {
             Cursor = new Cursor(StandardCursorType.Hand);
             ToolTip.SetTip(this, "Mostrar no Explorer");
         }
         PointerPressed += (_, _) =>
         {
-            if (imagePath is not null && File.Exists(imagePath))
-                ShowInExplorer(imagePath);
+            if (revealPath is not null && File.Exists(revealPath))
+                ShowInExplorer(revealPath);
             Close();
         };
 

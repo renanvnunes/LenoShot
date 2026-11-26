@@ -32,7 +32,7 @@ public static class SystemIntegration
     {
         if (OperatingSystem.IsWindows())
         {
-            Dispatcher.UIThread.Post(() => Controls.ToastWindow.Show(title, body, imagePath));
+            Dispatcher.UIThread.Post(() => Controls.ToastWindow.Show(title, body, imagePath, revealPath));
             return;
         }
 
