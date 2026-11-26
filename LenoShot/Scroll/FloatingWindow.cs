@@ -41,6 +41,9 @@ public class FloatingWindow : Window
         // Tipo "notificação": o GNOME e extensões (cantos arredondados, sombra) não mexem nela
         if (asNotification && TryGetPlatformHandle() is { } handle)
             PlatformWindow.MarkAsNotification(handle.Handle);
+        // Windows: sem o tamanho mínimo do sistema (32×39 px), que engrossaria as faixas de 2 px da moldura
+        if (OperatingSystem.IsWindows())
+            Win32Properties.AddWndProcHookCallback(this, Win32Window.KeepRequestedSize);
 
         Opened += (_, _) => Apply();
     }
@@ -76,15 +79,8 @@ public class FloatingWindow : Window
     public PixelRect CurrentRect => _target;
 
     /// <summary>Onde a janela realmente está na tela agora (pode diferir do pedido), ou null se não abriu.</summary>
-    public PixelRect? ActualRect()
-    {
-        if (!IsVisible || TryGetPlatformHandle() is not { } handle || PlatformWindow.GetRect(handle.Handle) is not { } r)
-            return null;
-        // No Windows a janela pode ser maior que o pedido, mas só a parte pedida fica visível (ver Apply)
-        return OperatingSystem.IsWindows() && _target.Width > 0
-            ? new PixelRect(r.X, r.Y, Math.Min(r.Width, _target.Width), Math.Min(r.Height, _target.Height))
-            : r;
-    }
+    public PixelRect? ActualRect() =>
+        IsVisible && TryGetPlatformHandle() is { } handle ? PlatformWindow.GetRect(handle.Handle) : null;
 
     /// <summary>Move a janela (sem mudar o tamanho).</summary>
     public void MoveTo(PixelPoint position)
@@ -97,14 +93,7 @@ public class FloatingWindow : Window
 
     private void Apply()
     {
-        if (TryGetPlatformHandle() is not { } handle)
-            return;
-
-        PlatformWindow.MoveResize(handle.Handle, _target);
-
-        // Windows: tamanho mínimo imposto pelo sistema (faixas finas da moldura) → recorta o excesso
-        if (OperatingSystem.IsWindows() && PlatformWindow.GetRect(handle.Handle) is { } actual)
-            PlatformWindow.ClipToSize(handle.Handle, _target.Size,
-                clip: actual.Width > _target.Width || actual.Height > _target.Height);
+        if (TryGetPlatformHandle() is { } handle)
+            PlatformWindow.MoveResize(handle.Handle, _target);
     }
 }

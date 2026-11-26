@@ -17,6 +17,7 @@ internal static partial class Win32Window
     private const uint SwpNoZOrder = 0x0004;
     private const uint SwpNoActivate = 0x0010;
     private const uint SwpNoOwnerZOrder = 0x0200;
+    private const uint WmWindowPosChanging = 0x0046;
 
     public static void MoveResize(nint window, PixelRect rect) =>
         SetWindowPos(window, 0, rect.X, rect.Y, rect.Width, rect.Height, SwpNoZOrder | SwpNoOwnerZOrder | SwpNoActivate);
@@ -32,13 +33,18 @@ internal static partial class Win32Window
     }
 
     /// <summary>
-    /// O Windows impõe um tamanho mínimo às janelas (uma faixa de 2 px volta com 39 px). Recorta a
-    /// parte visível (e clicável) para o tamanho pedido; com <paramref name="clip"/> falso remove o recorte.
+    /// Gancho do WndProc (Win32Properties.AddWndProcHookCallback) que tira o tamanho mínimo da janela.
+    /// O tratamento padrão de WM_WINDOWPOSCHANGING (DefWindowProc) não deixa uma janela de topo do
+    /// Avalonia (overlapped, com WS_MINIMIZEBOX) ficar menor que 32×39 px, mesmo com WM_GETMINMAXINFO
+    /// pedindo menos: uma faixa de 2 px da moldura voltava com 39 px. Tratando a mensagem aqui, o
+    /// tamanho pedido é aplicado como está. Só serve para janelas sem borda posicionadas pelo app
+    /// (sem maximizar nem redimensionar pelo usuário), que não dependem desse ajuste.
     /// </summary>
-    public static void ClipToSize(nint window, int width, int height, bool clip)
+    public static nint KeepRequestedSize(nint hwnd, uint msg, nint wParam, nint lParam, ref bool handled)
     {
-        // Depois do SetWindowRgn a região pertence ao sistema (não deve ser liberada)
-        SetWindowRgn(window, clip ? CreateRectRgn(0, 0, width, height) : 0, true);
+        if (msg == WmWindowPosChanging)
+            handled = true;
+        return 0;
     }
 
     public static PixelRect? GetRect(nint window) =>
@@ -56,12 +62,6 @@ internal static partial class Win32Window
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool SetWindowPos(nint hwnd, nint insertAfter, int x, int y, int cx, int cy, uint flags);
-
-    [LibraryImport("gdi32.dll")]
-    private static partial nint CreateRectRgn(int left, int top, int right, int bottom);
-
-    [LibraryImport("user32.dll")]
-    private static partial int SetWindowRgn(nint hwnd, nint region, [MarshalAs(UnmanagedType.Bool)] bool redraw);
 
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

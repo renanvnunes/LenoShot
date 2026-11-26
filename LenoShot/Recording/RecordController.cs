@@ -327,6 +327,8 @@ public sealed class RecordController
             _panel.QualityHeight, format, format == RecordFormat.Gif ? GifLimit : null);
         if (!await recorder.StartAsync())
         {
+            if (Environment.GetEnvironmentVariable("LENOSHOT_DEBUG") == "1")
+                Console.Error.WriteLine($"[LenoShot] ffmpeg falhou ao iniciar: {recorder.LastLog}");
             SystemIntegration.Notify("Não foi possível gravar", Truncate(recorder.LastLog));
             _busy = false;
             Close();

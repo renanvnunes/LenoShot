@@ -91,6 +91,44 @@ public sealed class ScreenRecorder
 
     public static bool IsFfmpegAvailable() => FindFfmpeg() is not null;
 
+    // Fila maior nas entradas (evita "thread message queue blocking" com áudio). O ffmpeg 9 tirou
+    // essa opção das entradas e recusa o comando inteiro, então só é usada nas versões anteriores.
+    private static string[]? s_inputQueue;
+    private static string[] InputQueue => s_inputQueue ?? [];
+
+    private static async Task<string[]> DetectInputQueueAsync()
+    {
+        string[] queue = ["-thread_queue_size", "1024"];
+        try
+        {
+            var psi = new ProcessStartInfo(FindFfmpeg() ?? "ffmpeg")
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+            };
+            foreach (var arg in new[] { "-hide_banner", "-version" })
+                psi.ArgumentList.Add(arg);
+
+            using var process = Process.Start(psi);
+            if (process is null)
+                return queue;
+            var stderr = process.StandardError.ReadToEndAsync();
+            var output = await process.StandardOutput.ReadToEndAsync();
+            await stderr;
+            await process.WaitForExitAsync();
+
+            // "ffmpeg version 9.1-full_build…", "ffmpeg version n8.0…"; versões de git ("N-…") são recentes
+            var match = System.Text.RegularExpressions.Regex.Match(output, @"ffmpeg version n?(\d+)\.");
+            return match.Success && int.Parse(match.Groups[1].Value) < 9 ? queue : [];
+        }
+        catch (Exception)
+        {
+            return queue; // não deu para descobrir: mantém o comportamento de antes
+        }
+    }
+
     /// <summary>
     /// Caminho do ffmpeg: ao lado do app (no Windows dá para colocar o ffmpeg.exe junto) ou no PATH.
     /// No Windows também lê o PATH atual do registro, para achar um ffmpeg instalado (ex.: pelo
@@ -133,6 +171,7 @@ public sealed class ScreenRecorder
     public async Task<bool> StartAsync()
     {
         Directory.CreateDirectory(_tempDir);
+        s_inputQueue ??= await DetectInputQueueAsync();
         await ResolveAudioSourcesAsync();
 
         if (!await StartSegmentAsync())
@@ -247,14 +286,14 @@ public sealed class ScreenRecorder
         if (OperatingSystem.IsWindows())
         {
             // gdigrab: as coordenadas são da área de trabalho virtual (podem ser negativas)
-            args.AddRange(["-thread_queue_size", "1024", "-f", "gdigrab", "-framerate", _fps.ToString(),
+            args.AddRange([.. InputQueue, "-f", "gdigrab", "-framerate", _fps.ToString(),
                 "-offset_x", _area.X.ToString(), "-offset_y", _area.Y.ToString(),
                 "-video_size", $"{_area.Width}x{_area.Height}", "-draw_mouse", "1", "-i", "desktop"]);
         }
         else
         {
             var display = Environment.GetEnvironmentVariable("DISPLAY") ?? ":0";
-            args.AddRange(["-thread_queue_size", "1024", "-f", "x11grab", "-framerate", _fps.ToString(),
+            args.AddRange([.. InputQueue, "-f", "x11grab", "-framerate", _fps.ToString(),
                 "-video_size", $"{_area.Width}x{_area.Height}", "-draw_mouse", "1",
                 "-i", $"{display}+{_area.X},{_area.Y}"]);
         }
@@ -266,9 +305,9 @@ public sealed class ScreenRecorder
             if (source is null)
                 continue;
             if (OperatingSystem.IsWindows())
-                args.AddRange(["-thread_queue_size", "1024", "-f", "dshow", "-audio_buffer_size", "50", "-i", $"audio={source}"]);
+                args.AddRange([.. InputQueue, "-f", "dshow", "-audio_buffer_size", "50", "-i", $"audio={source}"]);
             else
-                args.AddRange(["-thread_queue_size", "1024", "-f", "pulse", "-i", source]);
+                args.AddRange([.. InputQueue, "-f", "pulse", "-i", source]);
             audio++;
         }
 
