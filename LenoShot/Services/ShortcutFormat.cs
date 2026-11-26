@@ -66,7 +66,7 @@ public static partial class ShortcutFormat
         >= Key.A and <= Key.Z => ((char)('a' + (key - Key.A))).ToString(),
         >= Key.D0 and <= Key.D9 => ((char)('0' + (key - Key.D0))).ToString(),
         >= Key.F1 and <= Key.F24 => $"F{key - Key.F1 + 1}",
-        Key.PrintScreen => "Print",
+        Key.PrintScreen or Key.Print => "Print",
         Key.Pause => "Pause",
         Key.Insert => "Insert",
         Key.Home => "Home",

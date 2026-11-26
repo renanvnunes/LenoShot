@@ -258,10 +258,20 @@ public partial class App : Application
         _aboutWindow.Activate();
     }
 
+    /// <summary>
+    /// Captura pelo menu da bandeja: o menu ainda está na tela quando o clique chega, então espera
+    /// ele sumir, senão ele aparece na imagem.
+    /// </summary>
+    private async void StartCaptureAfterMenuClosed()
+    {
+        await Task.Delay(350);
+        StartCapture();
+    }
+
     private void SetupTray(IClassicDesktopStyleApplicationLifetime desktop)
     {
         var captureItem = new NativeMenuItem("Capturar área");
-        captureItem.Click += (_, _) => StartCapture();
+        captureItem.Click += (_, _) => StartCaptureAfterMenuClosed();
 
         var delayMenu = new NativeMenu();
         foreach (var seconds in new[] { 3, 5, 10 })
@@ -273,7 +283,7 @@ public partial class App : Application
         var delayItem = new NativeMenuItem("Capturar com atraso") { Menu = delayMenu };
 
         var recordItem = new NativeMenuItem("Gravar tela…");
-        recordItem.Click += (_, _) => StartCapture();
+        recordItem.Click += (_, _) => StartCaptureAfterMenuClosed();
         _zoomItem = new NativeMenuItem("Zoom no mouse") { IsEnabled = false };
         _zoomItem.Click += (_, _) => _record?.ToggleZoom();
         _drawItem = new NativeMenuItem("Desenhar na gravação") { IsEnabled = false };
