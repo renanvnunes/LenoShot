@@ -60,6 +60,13 @@ internal static class PlatformWindow
             X11Window.MoveResize(window, rect);
     }
 
+    /// <summary>Windows: recorta a janela ao tamanho pedido quando o sistema a deixou maior (tamanho mínimo).</summary>
+    public static void ClipToSize(IntPtr window, PixelSize size, bool clip)
+    {
+        if (OperatingSystem.IsWindows())
+            Win32Window.ClipToSize(window, size.Width, size.Height, clip);
+    }
+
     public static void MakeFullscreenOn(IntPtr window, PixelRect monitor)
     {
         if (OperatingSystem.IsWindows())

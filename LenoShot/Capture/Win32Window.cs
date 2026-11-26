@@ -31,6 +31,16 @@ internal static partial class Win32Window
         SetForegroundWindow(window);
     }
 
+    /// <summary>
+    /// O Windows impõe um tamanho mínimo às janelas (uma faixa de 2 px volta com 39 px). Recorta a
+    /// parte visível (e clicável) para o tamanho pedido; com <paramref name="clip"/> falso remove o recorte.
+    /// </summary>
+    public static void ClipToSize(nint window, int width, int height, bool clip)
+    {
+        // Depois do SetWindowRgn a região pertence ao sistema (não deve ser liberada)
+        SetWindowRgn(window, clip ? CreateRectRgn(0, 0, width, height) : 0, true);
+    }
+
     public static PixelRect? GetRect(nint window) =>
         GetWindowRect(window, out var r) ? new PixelRect(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top) : null;
 
@@ -46,6 +56,12 @@ internal static partial class Win32Window
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool SetWindowPos(nint hwnd, nint insertAfter, int x, int y, int cx, int cy, uint flags);
+
+    [LibraryImport("gdi32.dll")]
+    private static partial nint CreateRectRgn(int left, int top, int right, int bottom);
+
+    [LibraryImport("user32.dll")]
+    private static partial int SetWindowRgn(nint hwnd, nint region, [MarshalAs(UnmanagedType.Bool)] bool redraw);
 
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

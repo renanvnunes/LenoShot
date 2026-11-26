@@ -339,6 +339,10 @@ public sealed class RecordController
         _timer.Start();
         UpdateTime();
         _busy = false;
+        if (Environment.GetEnvironmentVariable("LENOSHOT_DEBUG") == "1")
+            DispatcherTimer.RunOnce(() => Console.Error.WriteLine(
+                $"[LenoShot] gravando: painel real={_panel.ActualRect()} visível={_panel.IsVisible} cruza={_panelOverlapsArea}"),
+                TimeSpan.FromSeconds(1.5));
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
 
