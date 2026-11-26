@@ -73,6 +73,15 @@ public sealed class RecordController
     private void HideIntrudingWindows()
     {
         var area = _request.Area;
+
+        // Diagnóstico: LENOSHOT_DEBUG=1 mostra onde as janelas pedidas realmente ficaram
+        if (Environment.GetEnvironmentVariable("LENOSHOT_DEBUG") == "1")
+        {
+            Console.Error.WriteLine($"[LenoShot] área={area} monitor={_request.Monitor} escala={_request.Scaling}");
+            foreach (var w in _frame)
+                Console.Error.WriteLine($"[LenoShot] moldura pedida={w.CurrentRect} real={w.ActualRect()} visível={w.IsVisible}");
+            Console.Error.WriteLine($"[LenoShot] painel base={_panelBase} real={_panel.ActualRect()} visível={_panel.IsVisible} cruza={_panelOverlapsArea}");
+        }
         foreach (var w in _frame)
             if (w.ActualRect() is { } r && r.Intersects(area))
                 w.Hide();
