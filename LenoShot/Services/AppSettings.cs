@@ -3,7 +3,10 @@ using System.Text.Json.Serialization;
 
 namespace LenoShot.Services;
 
-/// <summary>Preferências do usuário, guardadas em ~/.config/leno-shot/settings.json.</summary>
+/// <summary>
+/// Preferências do usuário, guardadas em ~/.config/leno-shot/settings.json
+/// (no Windows, %APPDATA%\leno-shot\settings.json).
+/// </summary>
 public sealed class AppSettings
 {
     public string SaveFolder { get; set; } =
@@ -36,6 +39,13 @@ public sealed class AppSettings
 
     /// <summary>Segundos de espera quando a captura é aberta pelo atalho (0 = imediata).</summary>
     public int ShortcutDelaySeconds { get; set; }
+
+    // ───────────── Atalhos globais (só Windows; no Linux ficam nos atalhos do GNOME) ─────────────
+
+    /// <summary>Atalho da captura no formato do GNOME (ex.: "Print", "&lt;Control&gt;&lt;Shift&gt;s"); vazio = nenhum.</summary>
+    public string? CaptureShortcut { get; set; } = "Print";
+    /// <summary>Atalho do zoom na gravação; vazio = nenhum.</summary>
+    public string? ZoomShortcut { get; set; }
 
     // ───────────── Persistência ─────────────
 

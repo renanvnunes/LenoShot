@@ -67,7 +67,7 @@
         <Image x:Name="AppIconImage" Width="88" Height="88" HorizontalAlignment="Center" Margin="0,0,0,10" />
         <TextBlock Text="Leno Shot" FontSize="22" FontWeight="Normal" Foreground="#F5F5F7" HorizontalAlignment="Center" />
         <TextBlock x:Name="VersionText" FontSize="13" Foreground="#8E8E93" HorizontalAlignment="Center" />
-        <TextBlock Text="Captura de tela minimalista para Linux" FontSize="13" Foreground="#AEAEB2"
+        <TextBlock Text="Captura de tela minimalista para Linux e Windows" FontSize="13" Foreground="#AEAEB2"
                    HorizontalAlignment="Center" Margin="0,6,0,0" />
       </StackPanel>
 

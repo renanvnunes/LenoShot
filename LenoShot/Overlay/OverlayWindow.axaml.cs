@@ -59,7 +59,7 @@ public partial class OverlayWindow : Window
         _overrideRedirect = false;
         if (TryGetPlatformHandle() is { } pre)
         {
-            X11Window.SetOverrideRedirect(pre.Handle);
+            PlatformWindow.SetOverrideRedirect(pre.Handle);
             _overrideRedirect = true;
         }
 
@@ -69,11 +69,11 @@ public partial class OverlayWindow : Window
             {
                 if (_overrideRedirect)
                 {
-                    X11Window.MoveResize(handle.Handle, _screenBounds);
-                    X11Window.FocusInput(handle.Handle);
+                    PlatformWindow.MoveResize(handle.Handle, _screenBounds);
+                    PlatformWindow.FocusInput(handle.Handle);
                 }
                 else
-                    X11Window.MakeFullscreenOn(handle.Handle, _screenBounds);
+                    PlatformWindow.MakeFullscreenOn(handle.Handle, _screenBounds);
             }
             else
                 WindowState = WindowState.FullScreen;

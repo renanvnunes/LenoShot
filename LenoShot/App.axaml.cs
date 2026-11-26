@@ -55,6 +55,7 @@ public partial class App : Application
             };
 
             _ipc = SingleInstance.StartServer(cmd => Dispatcher.UIThread.Post(() => HandleCommand(cmd)));
+            SystemIntegration.RegisterShortcuts(cmd => Dispatcher.UIThread.Post(() => HandleCommand(cmd)));
 
             if (StartupCommand != "daemon")
                 Dispatcher.UIThread.Post(() => HandleCommand(StartupCommand));
@@ -134,7 +135,7 @@ public partial class App : Application
     private void StartCountdown(int seconds)
     {
         // Mostra a contagem no meio do monitor onde está o mouse
-        var pointer = X11Input.GetPointer();
+        var pointer = PointerInput.GetPointer();
         var probe = new Window();
         var screen = probe.Screens.ScreenFromPoint(pointer) ?? probe.Screens.Primary;
         var monitor = screen?.Bounds ?? new PixelRect(0, 0, 1920, 1080);

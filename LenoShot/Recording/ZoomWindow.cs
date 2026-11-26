@@ -76,7 +76,7 @@ public sealed class ZoomWindow : FloatingWindow
             // Se a janela ainda está sumindo, só reverte a animação (recapturar pegaria a própria janela)
             if (!IsVisible)
             {
-                var snapshot = X11Capture.CaptureRect(_area);
+                var snapshot = ScreenCapture.CaptureRect(_area);
                 if (snapshot is null)
                     return;
 
@@ -91,7 +91,7 @@ public sealed class ZoomWindow : FloatingWindow
 
                 _progress = 0;
                 ApplyProgress();
-                _lens.Pointer = ToLocal(X11Input.GetPointer());
+                _lens.Pointer = ToLocal(PointerInput.GetPointer());
 
                 PlaceAt(_area, _scaling);
                 Show();

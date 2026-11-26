@@ -14,6 +14,8 @@
     <PublishAot>true</PublishAot>
     <InvariantGlobalization>true</InvariantGlobalization>
     <IsAotCompatible>true</IsAotCompatible>
+    <!-- Ícone do .exe no Windows, gerado pelo próprio app (opção export-ico; ver Program.cs) -->
+    <ApplicationIcon>../packaging/leno-shot.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <!-- Texto da licença embutido no app (tela Sobre) -->

@@ -113,7 +113,9 @@ public sealed class RecordController
     {
         if (!ScreenRecorder.IsFfmpegAvailable())
         {
-            SystemIntegration.Notify("ffmpeg não encontrado", "Instale o ffmpeg para gravar a tela (sudo apt install ffmpeg)");
+            SystemIntegration.Notify("ffmpeg não encontrado", OperatingSystem.IsWindows()
+                ? "Instale o ffmpeg para gravar a tela (winget install Gyan.FFmpeg) ou coloque o ffmpeg.exe junto do Leno Shot"
+                : "Instale o ffmpeg para gravar a tela (sudo apt install ffmpeg)");
             Close();
             return;
         }

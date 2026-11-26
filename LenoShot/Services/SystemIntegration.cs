@@ -1,8 +1,15 @@
 using System.Diagnostics;
+using System.Runtime.Versioning;
+using Avalonia.Threading;
+using Microsoft.Win32;
 
 namespace LenoShot.Services;
 
-/// <summary>Integrações com o desktop Linux: notificações, início automático e atalho do GNOME.</summary>
+/// <summary>
+/// Integrações com o desktop: notificações, início automático e atalhos globais.
+/// No Linux usa notify-send, ~/.config/autostart e os atalhos do GNOME; no Windows, um aviso
+/// próprio, a chave Run do registro e RegisterHotKey.
+/// </summary>
 public static class SystemIntegration
 {
     private static string Home => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -23,6 +30,12 @@ public static class SystemIntegration
     /// </summary>
     public static void Notify(string title, string body, string? imagePath = null, string? revealPath = null)
     {
+        if (OperatingSystem.IsWindows())
+        {
+            Dispatcher.UIThread.Post(() => Controls.ToastWindow.Show(title, body, imagePath));
+            return;
+        }
+
         var args = new List<string> { "--app-name=Leno Shot", "--expire-time=3000" };
         if (imagePath is not null)
             args.Add($"--icon={imagePath}"); // o GNOME mostra a miniatura da imagem salva
@@ -65,10 +78,6 @@ public static class SystemIntegration
 
     private static readonly int[] IconSizes = [16, 24, 32, 48, 64, 128, 256, 512];
 
-    /// <summary>
-    /// Instala o ícone (tema hicolor) e a entrada no menu de aplicativos em ~/.local/share.
-    /// Roda a cada início, então ícone e atalhos ficam sempre atualizados.
-    /// </summary>
     /// <summary>Gera os PNGs do ícone em todos os tamanhos, na estrutura do tema hicolor.</summary>
     public static void ExportIcons(string hicolorDir)
     {
@@ -81,8 +90,96 @@ public static class SystemIntegration
         }
     }
 
+    /// <summary>
+    /// Gera o ícone do Windows (.ico) com vários tamanhos. Usado pelo .exe e pelo instalador.
+    /// Como nos ícones do próprio Windows, o 256 vai em PNG e os menores em bitmap (DIB de 32 bits),
+    /// que qualquer leitor de .ico entende.
+    /// </summary>
+    public static void ExportIco(string file)
+    {
+        int[] sizes = [16, 20, 24, 32, 40, 48, 64, 128, 256];
+        var images = sizes.Select(size =>
+        {
+            using var bitmap = AppIcon.CreateBitmap(size);
+            if (size >= 256)
+            {
+                using var png = new MemoryStream();
+                bitmap.Save(png, Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
+                return png.ToArray();
+            }
+            return IcoDib(bitmap, size);
+        }).ToList();
+
+        using var output = new BinaryWriter(File.Create(file));
+        output.Write((ushort)0);            // reservado
+        output.Write((ushort)1);            // tipo: ícone
+        output.Write((ushort)sizes.Length);
+
+        var offset = 6 + 16 * sizes.Length; // cabeçalho + uma entrada de 16 bytes por tamanho
+        for (var i = 0; i < sizes.Length; i++)
+        {
+            output.Write((byte)(sizes[i] >= 256 ? 0 : sizes[i])); // largura (0 = 256)
+            output.Write((byte)(sizes[i] >= 256 ? 0 : sizes[i])); // altura
+            output.Write((byte)0);          // cores da paleta (nenhuma)
+            output.Write((byte)0);          // reservado
+            output.Write((ushort)1);        // planos
+            output.Write((ushort)32);       // bits por pixel
+            output.Write((uint)images[i].Length);
+            output.Write((uint)offset);
+            offset += images[i].Length;
+        }
+        foreach (var image in images)
+            output.Write(image);
+    }
+
+    /// <summary>
+    /// Uma imagem do .ico em bitmap: cabeçalho BITMAPINFOHEADER (altura em dobro, por causa da
+    /// máscara), pixels BGRA de baixo para cima, sem pré-multiplicar, e a máscara AND (zerada:
+    /// a transparência vem do canal alfa).
+    /// </summary>
+    private static unsafe byte[] IcoDib(Avalonia.Media.Imaging.Bitmap bitmap, int size)
+    {
+        var pixels = new byte[size * size * 4];
+        fixed (byte* p = pixels)
+            bitmap.CopyPixels(new Avalonia.PixelRect(0, 0, size, size), (IntPtr)p, pixels.Length, size * 4);
+
+        // O Avalonia entrega BGRA pré-multiplicado; o .ico espera a cor "pura"
+        for (var i = 0; i < pixels.Length; i += 4)
+        {
+            var a = pixels[i + 3];
+            if (a is 0 or 255)
+                continue;
+            for (var c = 0; c < 3; c++)
+                pixels[i + c] = (byte)Math.Min(255, pixels[i + c] * 255 / a);
+        }
+
+        var maskStride = (size + 31) / 32 * 4;
+        using var dib = new MemoryStream();
+        using var w = new BinaryWriter(dib);
+        w.Write(40u);                       // tamanho do cabeçalho
+        w.Write(size);                      // largura
+        w.Write(size * 2);                  // altura: imagem + máscara
+        w.Write((ushort)1);                 // planos
+        w.Write((ushort)32);                // bits por pixel
+        w.Write(0u);                        // sem compressão
+        w.Write((uint)(pixels.Length + maskStride * size));
+        w.Write(0); w.Write(0); w.Write(0u); w.Write(0u);
+        for (var y = size - 1; y >= 0; y--) // linhas de baixo para cima
+            w.Write(pixels, y * size * 4, size * 4);
+        w.Write(new byte[maskStride * size]);
+        w.Flush();
+        return dib.ToArray();
+    }
+
+    /// <summary>
+    /// Instala o ícone (tema hicolor) e a entrada no menu de aplicativos em ~/.local/share.
+    /// Roda a cada início, então ícone e atalhos ficam sempre atualizados. Só no Linux.
+    /// </summary>
     public static void InstallDesktopEntry()
     {
+        if (OperatingSystem.IsWindows())
+            return;
+
         try
         {
             // Instalado pelo .deb: ícone e menu já estão em /usr/share
@@ -182,10 +279,21 @@ public static class SystemIntegration
 
     private static string AutostartFile => Path.Combine(Home, ".config", "autostart", "leno-shot.desktop");
 
-    public static bool IsAutostartEnabled => File.Exists(AutostartFile);
+    private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
+    private const string RunValue = "Leno Shot";
+
+    public static bool IsAutostartEnabled => OperatingSystem.IsWindows()
+        ? Registry.CurrentUser.OpenSubKey(RunKey)?.GetValue(RunValue) is not null
+        : File.Exists(AutostartFile);
 
     public static void SetAutostart(bool enabled)
     {
+        if (OperatingSystem.IsWindows())
+        {
+            SetWindowsAutostart(enabled);
+            return;
+        }
+
         if (!enabled)
         {
             File.Delete(AutostartFile);
@@ -206,13 +314,65 @@ public static class SystemIntegration
             """);
     }
 
-    // ───────────── Atalho global (GNOME) ─────────────
+    [SupportedOSPlatform("windows")]
+    private static void SetWindowsAutostart(bool enabled)
+    {
+        using var key = Registry.CurrentUser.CreateSubKey(RunKey);
+        if (enabled && Environment.ProcessPath is { } exe)
+            key.SetValue(RunValue, $"\"{exe}\"");
+        else
+            key.DeleteValue(RunValue, throwOnMissingValue: false);
+    }
+
+    // ───────────── Atalhos globais ─────────────
+
+    /// <summary>Atalhos globais do app (no GNOME, cada um é uma entrada de atalho personalizado).</summary>
+    public enum ShortcutSlot { Capture, Zoom }
+
+    private static string SlotCommandName(ShortcutSlot slot) => slot == ShortcutSlot.Capture ? "capture" : "record-zoom";
+
+    private static Action<string>? s_runCommand;
+
+    /// <summary>
+    /// Liga os atalhos globais salvos. No Windows o próprio app registra os atalhos e executa o
+    /// comando; no Linux o GNOME chama `leno-shot capture`, então não há nada a fazer.
+    /// </summary>
+    public static void RegisterShortcuts(Action<string> runCommand)
+    {
+        s_runCommand = runCommand;
+        if (!OperatingSystem.IsWindows())
+            return;
+
+        foreach (var slot in Enum.GetValues<ShortcutSlot>())
+        {
+            var accelerator = GetSavedShortcut(slot);
+            if (!RegisterWindowsShortcut(slot, accelerator))
+                Console.Error.WriteLine($"[leno-shot] atalho {accelerator} indisponível (em uso por outro programa?)");
+        }
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static bool RegisterWindowsShortcut(ShortcutSlot slot, string? accelerator) =>
+        Win32Hotkeys.Register((int)slot + 1, accelerator, () => s_runCommand?.Invoke(SlotCommandName(slot)));
+
+    private static string? GetSavedShortcut(ShortcutSlot slot) =>
+        slot == ShortcutSlot.Capture ? AppSettings.Current.CaptureShortcut : AppSettings.Current.ZoomShortcut;
+
+    /// <summary>
+    /// Enquanto um atalho é gravado na tela de configurações: entrega a tecla Print Screen (com
+    /// modificadores) a <paramref name="onPressed"/>, já na thread da interface. No Windows a tecla
+    /// não chega à janela (o sistema a usa para a Ferramenta de Captura); no Linux não é preciso.
+    /// </summary>
+    public static void ListenPrintScreen(Action<string>? onPressed)
+    {
+        if (OperatingSystem.IsWindows())
+            Win32Hotkeys.ListenPrintScreen(onPressed is null
+                ? null
+                : accelerator => Dispatcher.UIThread.Post(() => onPressed(accelerator)));
+    }
 
     private const string KeybindingsSchema = "org.gnome.settings-daemon.plugins.media-keys";
     private const string KeybindingBase = "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/";
-
-    /// <summary>Atalhos globais do app: cada um é uma entrada de atalho personalizado do GNOME.</summary>
-    public enum ShortcutSlot { Capture, Zoom }
 
     private static string SlotPath(ShortcutSlot slot) =>
         KeybindingBase + (slot == ShortcutSlot.Capture ? "leno-shot/" : "leno-shot-zoom/");
@@ -222,19 +382,28 @@ public static class SystemIntegration
 
     private static string SlotName(ShortcutSlot slot) => slot == ShortcutSlot.Capture ? "Leno Shot" : "Leno Shot — zoom na gravação";
 
-    private static string SlotCommand(ShortcutSlot slot) =>
-        $"{LauncherPath} {(slot == ShortcutSlot.Capture ? "capture" : "record-zoom")}";
+    private static string SlotCommand(ShortcutSlot slot) => $"{LauncherPath} {SlotCommandName(slot)}";
 
     /// <summary>Atalho atual no formato do GNOME, por exemplo "&lt;Shift&gt;Print".</summary>
     public static async Task<string?> GetShortcutAsync(ShortcutSlot slot = ShortcutSlot.Capture)
     {
+        if (OperatingSystem.IsWindows())
+            return GetSavedShortcut(slot) is { Length: > 0 } saved ? saved : null;
+
         var value = await Run("gsettings", ["get", SlotSchema(slot), "binding"]);
         value = value?.Trim().Trim('\'');
         return string.IsNullOrEmpty(value) ? null : value;
     }
 
-    public static async Task SetShortcutAsync(string accelerator, ShortcutSlot slot = ShortcutSlot.Capture)
+    /// <summary>
+    /// Troca o atalho (vazio desliga). Devolve false se o sistema recusou a combinação
+    /// (no Windows, quando outro programa já usa o atalho).
+    /// </summary>
+    public static async Task<bool> SetShortcutAsync(string accelerator, ShortcutSlot slot = ShortcutSlot.Capture)
     {
+        if (OperatingSystem.IsWindows())
+            return RegisterWindowsShortcut(slot, accelerator);
+
         var schema = SlotSchema(slot);
         await Run("gsettings", ["set", schema, "name", SlotName(slot)]);
         await Run("gsettings", ["set", schema, "command", SlotCommand(slot)]);
@@ -250,6 +419,19 @@ public static class SystemIntegration
                 .Append($"'{path}'");
             await Run("gsettings", ["set", KeybindingsSchema, "custom-keybindings", $"[{string.Join(", ", items)}]"]);
         }
+        return true;
+    }
+
+    /// <summary>Guarda o atalho escolhido (no Windows; no Linux o GNOME já guarda).</summary>
+    public static void SaveShortcut(string? accelerator, ShortcutSlot slot)
+    {
+        if (!OperatingSystem.IsWindows())
+            return;
+        if (slot == ShortcutSlot.Capture)
+            AppSettings.Current.CaptureShortcut = accelerator ?? "";
+        else
+            AppSettings.Current.ZoomShortcut = accelerator ?? "";
+        AppSettings.Current.Save();
     }
 
     // ───────────── Utilitário ─────────────
@@ -260,7 +442,8 @@ public static class SystemIntegration
     {
         try
         {
-            var psi = new ProcessStartInfo(file) { RedirectStandardOutput = true, UseShellExecute = false };
+            // CreateNoWindow: no Windows, sem isso cada programa de console abre uma janela preta
+            var psi = new ProcessStartInfo(file) { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
             foreach (var arg in args)
                 psi.ArgumentList.Add(arg);
 
