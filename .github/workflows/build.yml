@@ -3,7 +3,6 @@ name: Build
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
@@ -58,24 +57,45 @@ jobs:
           path: dist/*-setup.exe
           if-no-files-found: error
 
+  # Cada push na main com uma versão nova no csproj gera a tag e o release sozinho.
+  # Push sem mudar o <Version> não publica nada.
   release:
     name: Publicar release
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [deb, windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+
+      - name: Ler versão
+        id: version
+        run: |
+          VERSION="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' LenoShot/LenoShot.csproj)"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null 2>&1; then
+            echo "new=false" >> "$GITHUB_OUTPUT"
+            echo "A tag v$VERSION já existe: nenhum release novo."
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.version.outputs.new == 'true'
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
 
       # O app confere o hash antes de instalar uma atualização
       - name: Gerar SHA256SUMS
+        if: steps.version.outputs.new == 'true'
         run: cd artifacts && sha256sum * > SHA256SUMS
 
-      - uses: softprops/action-gh-release@v2
+      - if: steps.version.outputs.new == 'true'
+        uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           generate_release_notes: true
           files: artifacts/*
