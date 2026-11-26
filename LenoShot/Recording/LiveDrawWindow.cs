@@ -28,7 +28,7 @@ public sealed class LiveDrawWindow : FloatingWindow
         _area = area;
         _scaling = scaling;
 
-        Title = "Leno Shot — desenho";
+        Title = "LenoShot — desenho";
         Background = Brushes.Black;
         ShowActivated = false;
 

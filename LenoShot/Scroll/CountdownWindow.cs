@@ -22,7 +22,7 @@ public sealed class CountdownWindow : FloatingWindow
 
     public CountdownWindow(int seconds)
     {
-        Title = "Leno Shot — contagem";
+        Title = "LenoShot — contagem";
         Background = Brushes.Transparent;
         TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
         ShowActivated = false;

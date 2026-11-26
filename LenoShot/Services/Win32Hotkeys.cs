@@ -88,7 +88,7 @@ internal static unsafe partial class Win32Hotkeys
     {
         if (s_hookThread is not null)
             return;
-        s_hookThread = new Thread(HookLoop) { IsBackground = true, Name = "leno-shot keyboard hook" };
+        s_hookThread = new Thread(HookLoop) { IsBackground = true, Name = "LenoShot keyboard hook" };
         s_hookThread.Start();
     }
 
@@ -96,7 +96,7 @@ internal static unsafe partial class Win32Hotkeys
     {
         if (SetWindowsHookExW(WhKeyboardLl, &KeyboardProc, GetModuleHandleW(null), 0) == 0)
         {
-            Console.Error.WriteLine("[leno-shot] não foi possível instalar o gancho do teclado (Print Screen)");
+            Console.Error.WriteLine("[LenoShot] não foi possível instalar o gancho do teclado (Print Screen)");
             return;
         }
 
@@ -141,7 +141,7 @@ internal static unsafe partial class Win32Hotkeys
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"[leno-shot] erro no atalho: {ex}");
+                Console.Error.WriteLine($"[LenoShot] erro no atalho: {ex}");
             }
         }
         return CallNextHookEx(0, code, wParam, lParam);
@@ -220,7 +220,7 @@ internal static unsafe partial class Win32Hotkeys
         }
 
         if (s_window == 0)
-            Console.Error.WriteLine("[leno-shot] não foi possível criar a janela dos atalhos globais");
+            Console.Error.WriteLine("[LenoShot] não foi possível criar a janela dos atalhos globais");
         return s_window != 0;
     }
 
@@ -231,7 +231,7 @@ internal static unsafe partial class Win32Hotkeys
         {
             // Uma exceção aqui (código chamado pelo Windows) derrubaria o processo
             try { action(); }
-            catch (Exception ex) { Console.Error.WriteLine($"[leno-shot] erro no atalho: {ex}"); }
+            catch (Exception ex) { Console.Error.WriteLine($"[LenoShot] erro no atalho: {ex}"); }
             return 0;
         }
         return DefWindowProcW(hwnd, message, wParam, lParam);

@@ -1,6 +1,6 @@
-; Instalador do Leno Shot para Windows (Inno Setup 6).
+; Instalador do LenoShot para Windows (Inno Setup 6).
 ; Normalmente chamado pelo build-windows.ps1 -Installer, que passa a versão e as pastas:
-;   ISCC /DAppVersion=0.4.3 /DSourceDir=..\dist\leno-shot_0.4.3_win-x64 /DOutputDir=..\dist leno-shot.iss
+;   ISCC /DAppVersion=0.4.3 /DSourceDir=..\dist\LenoShot_0.4.3_win-x64 /DOutputDir=..\dist LenoShot.iss
 ;
 ; Instala só para o usuário atual (em %LOCALAPPDATA%\Programs, sem pedir administrador); o
 ; assistente oferece instalar para todos os usuários, se preferir.
@@ -9,14 +9,14 @@
   #define AppVersion "0.0.0"
 #endif
 #ifndef SourceDir
-  #define SourceDir "..\dist\leno-shot_" + AppVersion + "_win-x64"
+  #define SourceDir "..\dist\LenoShot_" + AppVersion + "_win-x64"
 #endif
 #ifndef OutputDir
   #define OutputDir "..\dist"
 #endif
 
-#define AppName "Leno Shot"
-#define AppExe "leno-shot.exe"
+#define AppName "LenoShot"
+#define AppExe "LenoShot.exe"
 #define RunKey "Software\Microsoft\Windows\CurrentVersion\Run"
 
 [Setup]
@@ -39,8 +39,8 @@ MinVersion=10.0.17763
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir={#OutputDir}
-OutputBaseFilename=leno-shot_{#AppVersion}_win-x64-setup
-SetupIconFile=leno-shot.ico
+OutputBaseFilename=LenoShot_{#AppVersion}_win-x64-setup
+SetupIconFile=LenoShot.ico
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName}
 LicenseFile=..\LICENSE
@@ -54,7 +54,7 @@ CloseApplications=no
 Name: "ptbr"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 
 [Tasks]
-Name: "autostart"; Description: "Iniciar o Leno Shot com o Windows (fica na bandeja, pronto para o atalho Print)"
+Name: "autostart"; Description: "Iniciar o LenoShot com o Windows (fica na bandeja, pronto para o atalho Print)"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; Flags: unchecked
 
 [Files]
@@ -73,7 +73,7 @@ Root: HKCU; Subkey: "{#RunKey}"; ValueType: string; ValueName: "{#AppName}"; Val
 Filename: "{app}\{#AppExe}"; Parameters: "settings"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
-// Pede ao Leno Shot em execução que feche (o executável não pode ser trocado com o app aberto)
+// Pede ao LenoShot em execução que feche (o executável não pode ser trocado com o app aberto)
 procedure QuitRunningApp(const Exe: String);
 var
   ResultCode: Integer;
@@ -100,7 +100,7 @@ end;
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   // Remove o início automático mesmo se ele foi ligado pelas configurações do app.
-  // As preferências em %APPDATA%\leno-shot e as capturas salvas ficam (são do usuário).
+  // As preferências em %APPDATA%\LenoShot e as capturas salvas ficam (são do usuário).
   if CurUninstallStep = usUninstall then
     RegDeleteValue(HKEY_CURRENT_USER, '{#RunKey}', '{#AppName}');
 end;

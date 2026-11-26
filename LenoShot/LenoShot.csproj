@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyName>leno-shot</AssemblyName>
+    <AssemblyName>LenoShot</AssemblyName>
     <RootNamespace>LenoShot</RootNamespace>
     <Version>0.6.0</Version>
     <Authors>Renan Nunes</Authors>
@@ -15,7 +15,7 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <IsAotCompatible>true</IsAotCompatible>
     <!-- Ícone do .exe no Windows, gerado pelo próprio app (opção export-ico; ver Program.cs) -->
-    <ApplicationIcon>../packaging/leno-shot.ico</ApplicationIcon>
+    <ApplicationIcon>../packaging/LenoShot.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <!-- Texto da licença embutido no app (tela Sobre) -->

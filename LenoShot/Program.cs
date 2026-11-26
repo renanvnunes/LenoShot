@@ -20,7 +20,7 @@ internal static class Program
             return 0;
         }
 
-        // Gera o ícone do Windows (.ico); usado para atualizar packaging/leno-shot.ico
+        // Gera o ícone do Windows (.ico); usado para atualizar packaging/LenoShot.ico
         if (args is ["--export-ico", var file])
         {
             BuildAvaloniaApp().SetupWithoutStarting();

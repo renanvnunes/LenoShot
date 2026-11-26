@@ -35,7 +35,7 @@ public partial class App : Application
             // O app fica rodando na bandeja: um erro numa captura não deve derrubá-lo.
             Dispatcher.UIThread.UnhandledException += (_, e) =>
             {
-                Console.Error.WriteLine($"[leno-shot] erro: {e.Exception}");
+                Console.Error.WriteLine($"[LenoShot] erro: {e.Exception}");
                 e.Handled = true;
             };
             desktop.Exit += (_, _) => _ipc?.Dispose();
@@ -286,7 +286,7 @@ public partial class App : Application
         var settingsItem = new NativeMenuItem("Configurações…");
         settingsItem.Click += (_, _) => OpenSettings();
 
-        var aboutItem = new NativeMenuItem("Sobre o Leno Shot");
+        var aboutItem = new NativeMenuItem("Sobre o LenoShot");
         aboutItem.Click += (_, _) => OpenAbout();
 
         var quitItem = new NativeMenuItem("Sair");
@@ -295,7 +295,7 @@ public partial class App : Application
         var tray = _tray = new TrayIcon
         {
             Icon = AppIcon.Create(),
-            ToolTipText = "Leno Shot",
+            ToolTipText = "LenoShot",
             Menu = new NativeMenu { Items = { captureItem, delayItem, new NativeMenuItemSeparator(), recordItem, _zoomItem, _drawItem, _pauseItem, _stopItem, _cancelItem, new NativeMenuItemSeparator(), settingsItem, aboutItem, new NativeMenuItemSeparator(), quitItem } },
         };
         // Durante uma gravação, clicar no ícone da bandeja para a gravação

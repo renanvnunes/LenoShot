@@ -4,18 +4,18 @@ using System.Text.Json.Serialization;
 namespace LenoShot.Services;
 
 /// <summary>
-/// Preferências do usuário, guardadas em ~/.config/leno-shot/settings.json
-/// (no Windows, %APPDATA%\leno-shot\settings.json).
+/// Preferências do usuário, guardadas em ~/.config/LenoShot/settings.json
+/// (no Windows, %APPDATA%\LenoShot\settings.json).
 /// </summary>
 public sealed class AppSettings
 {
     public string SaveFolder { get; set; } =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Leno Shot");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "LenoShot");
 
     // ───────────── Gravação de tela ─────────────
 
     public string VideoFolder { get; set; } =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Leno Shot");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "LenoShot");
     public int RecordFps { get; set; } = 30;
 
     /// <summary>Altura máxima do vídeo em pixels (1080, 720, 480); 0 = tamanho original da área.</summary>
@@ -50,7 +50,7 @@ public sealed class AppSettings
     // ───────────── Persistência ─────────────
 
     private static readonly string FilePath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "leno-shot", "settings.json");
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LenoShot", "settings.json");
 
     private static AppSettings? s_current;
 
@@ -66,7 +66,7 @@ public sealed class AppSettings
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[leno-shot] configurações inválidas, usando padrões: {ex.Message}");
+            Console.Error.WriteLine($"[LenoShot] configurações inválidas, usando padrões: {ex.Message}");
         }
         return new AppSettings();
     }

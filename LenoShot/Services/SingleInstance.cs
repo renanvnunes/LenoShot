@@ -5,7 +5,7 @@ namespace LenoShot.Services;
 
 /// <summary>
 /// Garante uma única instância do app usando um socket Unix.
-/// Chamadas como `leno-shot capture` apenas enviam o comando para a instância em execução.
+/// Chamadas como `LenoShot capture` apenas enviam o comando para a instância em execução.
 /// </summary>
 public sealed class SingleInstance : IDisposable
 {
@@ -19,7 +19,7 @@ public sealed class SingleInstance : IDisposable
             var dir = Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR");
             if (string.IsNullOrEmpty(dir))
                 dir = Path.GetTempPath();
-            return Path.Combine(dir, "leno-shot.sock");
+            return Path.Combine(dir, "LenoShot.sock");
         }
     }
 

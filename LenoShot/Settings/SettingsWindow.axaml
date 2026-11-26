@@ -85,7 +85,7 @@
         <StackPanel Orientation="Horizontal" Spacing="14">
           <Image x:Name="AppIconImage" Width="44" Height="44" />
           <StackPanel VerticalAlignment="Center" Spacing="2">
-            <TextBlock Classes="h1" Text="Leno Shot" />
+            <TextBlock Classes="h1" Text="LenoShot" />
             <TextBlock Classes="subtitle" x:Name="SubtitleText" Text="Configurações" />
           </StackPanel>
         </StackPanel>
@@ -137,7 +137,7 @@
             <Grid Classes="row" ColumnDefinitions="*,Auto">
               <StackPanel VerticalAlignment="Center">
                 <TextBlock Classes="label" Text="Iniciar com o sistema" />
-                <TextBlock Classes="hint" Text="Deixa o Leno Shot pronto na bandeja ao entrar na sessão" />
+                <TextBlock Classes="hint" Text="Deixa o LenoShot pronto na bandeja ao entrar na sessão" />
               </StackPanel>
               <ToggleSwitch Grid.Column="1" x:Name="AutostartToggle" VerticalAlignment="Center" />
             </Grid>

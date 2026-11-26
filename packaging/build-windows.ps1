@@ -1,4 +1,4 @@
-# Gera o Leno Shot para Windows (x64) em dist/: pasta, .zip e, com -Installer, o instalador .exe.
+# Gera o LenoShot para Windows (x64) em dist/: pasta, .zip e, com -Installer, o instalador .exe.
 # Uso: powershell -ExecutionPolicy Bypass -File packaging/build-windows.ps1 [-NoAot] [-Installer]
 #
 # Por padrão compila com Native AOT, que requer as ferramentas de C++ do Visual Studio (carga de
@@ -7,7 +7,7 @@
 #
 # -Installer gera também o instalador com o Inno Setup 6 (winget install JRSoftware.InnoSetup).
 #
-# O ffmpeg (usado na gravação de tela) vai junto do leno-shot.exe: o script baixa o build
+# O ffmpeg (usado na gravação de tela) vai junto do LenoShot.exe: o script baixa o build
 # "essentials" do Gyan (uma vez só, guardado em dist/cache) e confere o SHA256. -NoFfmpeg deixa de
 # fora; aí o usuário precisa instalar o ffmpeg por conta própria.
 param([switch]$NoAot, [switch]$Installer, [switch]$NoFfmpeg)
@@ -22,7 +22,7 @@ $ffmpegSha256 = '60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047b
 $root = Split-Path -Parent $PSScriptRoot
 $project = Join-Path $root 'LenoShot/LenoShot.csproj'
 $version = ([xml](Get-Content $project)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
-$name = "leno-shot_${version}_win-x64"
+$name = "LenoShot_${version}_win-x64"
 $dist = Join-Path $root 'dist'
 $publish = Join-Path $dist 'publish-win'
 $out = Join-Path $dist $name
@@ -41,7 +41,7 @@ if ($Installer) {
     if (-not $iscc) { throw 'Inno Setup 6 não encontrado. Instale com: winget install JRSoftware.InnoSetup' }
 }
 
-Write-Host "==> Leno Shot $version"
+Write-Host "==> LenoShot $version"
 Remove-Item -Recurse -Force $publish, $out, $zip, $setup -ErrorAction SilentlyContinue
 
 if ($NoAot) {
@@ -56,7 +56,7 @@ if ($LASTEXITCODE -ne 0) { throw 'dotnet publish falhou' }
 
 # Executável e bibliotecas nativas (sem os símbolos de depuração .pdb)
 New-Item -ItemType Directory -Force $out | Out-Null
-Copy-Item (Join-Path $publish 'leno-shot.exe') $out
+Copy-Item (Join-Path $publish 'LenoShot.exe') $out
 Get-ChildItem $publish -Filter '*.dll' | Copy-Item -Destination $out
 Copy-Item (Join-Path $root 'LICENSE') (Join-Path $out 'LICENSE.txt')
 
@@ -100,7 +100,7 @@ Write-Host ('    {0} ({1:N1} MB)' -f $zip, ((Get-Item $zip).Length / 1MB))
 
 if ($Installer) {
     Write-Host '==> Gerando o instalador (Inno Setup)'
-    & $iscc /Q "/DAppVersion=$version" "/DSourceDir=$out" "/DOutputDir=$dist" (Join-Path $PSScriptRoot 'leno-shot.iss')
+    & $iscc /Q "/DAppVersion=$version" "/DSourceDir=$out" "/DOutputDir=$dist" (Join-Path $PSScriptRoot 'LenoShot.iss')
     if ($LASTEXITCODE -ne 0) { throw 'Inno Setup falhou' }
     Write-Host ('    {0} ({1:N1} MB)' -f $setup, ((Get-Item $setup).Length / 1MB))
 }

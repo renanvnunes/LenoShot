@@ -32,7 +32,7 @@ public static class CaptureOutput
     {
         var dir = AppSettings.Current.SaveFolder;
         Directory.CreateDirectory(dir);
-        var file = Path.Combine(dir, $"leno-shot_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.png");
+        var file = Path.Combine(dir, $"LenoShot_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.png");
 
         await Task.Run(() => bitmap.Save(file, PngBitmapEncoderOptions.Default));
 

@@ -13,14 +13,14 @@ namespace LenoShot.Services;
 public static class SystemIntegration
 {
     private static string Home => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-    /// <summary>Instalado pelo pacote .deb (binário em /usr/lib/leno-shot).</summary>
+    /// <summary>Instalado pelo pacote .deb (binário em /usr/lib/LenoShot).</summary>
     public static bool IsSystemInstall =>
         Environment.ProcessPath?.StartsWith("/usr/", StringComparison.Ordinal) == true;
 
     /// <summary>Comando usado por atalhos, menu e início automático.</summary>
     private static string LauncherPath => IsSystemInstall
-        ? "/usr/bin/leno-shot"
-        : Path.Combine(Home, ".local", "bin", "leno-shot");
+        ? "/usr/bin/LenoShot"
+        : Path.Combine(Home, ".local", "bin", "LenoShot");
 
     // ───────────── Notificações ─────────────
 
@@ -36,7 +36,7 @@ public static class SystemIntegration
             return;
         }
 
-        var args = new List<string> { "--app-name=Leno Shot", "--expire-time=3000" };
+        var args = new List<string> { "--app-name=LenoShot", "--expire-time=3000" };
         if (imagePath is not null)
             args.Add($"--icon={imagePath}"); // o GNOME mostra a miniatura da imagem salva
         if (revealPath is not null)
@@ -86,7 +86,7 @@ public static class SystemIntegration
             var dir = Path.Combine(hicolorDir, $"{size}x{size}", "apps");
             Directory.CreateDirectory(dir);
             using var bitmap = AppIcon.CreateBitmap(size);
-            bitmap.Save(Path.Combine(dir, "leno-shot.png"), Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
+            bitmap.Save(Path.Combine(dir, "LenoShot.png"), Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
         }
     }
 
@@ -189,7 +189,7 @@ public static class SystemIntegration
             // Com o pacote .deb instalado, o atalho do sistema é o válido. Um build de desenvolvimento
             // não pode criar um atalho local que o sobreponha: ele apontaria para um programa que
             // não existe e o GNOME esconderia o ícone do app.
-            if (File.Exists("/usr/share/applications/leno-shot.desktop") || !File.Exists(LauncherPath))
+            if (File.Exists("/usr/share/applications/LenoShot.desktop") || !File.Exists(LauncherPath))
                 return;
 
             var share = Path.Combine(Home, ".local", "share");
@@ -197,18 +197,18 @@ public static class SystemIntegration
 
             var apps = Path.Combine(share, "applications");
             Directory.CreateDirectory(apps);
-            File.WriteAllText(Path.Combine(apps, "leno-shot.desktop"), $"""
+            File.WriteAllText(Path.Combine(apps, "LenoShot.desktop"), $"""
                 [Desktop Entry]
                 Type=Application
-                Name=Leno Shot
+                Name=LenoShot
                 GenericName=Captura de tela
                 Comment=Capture, anote e compartilhe a tela
                 Exec={LauncherPath} settings
-                Icon=leno-shot
+                Icon=LenoShot
                 Terminal=false
                 Categories=Utility;Graphics;
                 Keywords=screenshot;print;captura;tela;
-                StartupWMClass=leno-shot
+                StartupWMClass=LenoShot
                 Actions=capture;delay;
 
                 [Desktop Action capture]
@@ -226,7 +226,7 @@ public static class SystemIntegration
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[leno-shot] não foi possível instalar o ícone: {ex.Message}");
+            Console.Error.WriteLine($"[LenoShot] não foi possível instalar o ícone: {ex.Message}");
         }
     }
 
@@ -245,7 +245,7 @@ public static class SystemIntegration
                 var removed = false;
                 foreach (var size in IconSizes)
                 {
-                    var file = Path.Combine(hicolor, $"{size}x{size}", "apps", "leno-shot.png");
+                    var file = Path.Combine(hicolor, $"{size}x{size}", "apps", "LenoShot.png");
                     if (File.Exists(file))
                     {
                         File.Delete(file);
@@ -255,7 +255,7 @@ public static class SystemIntegration
                 if (!removed)
                     return;
             }
-            else if (IsSystemInstall || File.Exists(Path.Combine(hicolor, "256x256", "apps", "leno-shot.png")))
+            else if (IsSystemInstall || File.Exists(Path.Combine(hicolor, "256x256", "apps", "LenoShot.png")))
             {
                 // Desenhar exige a thread da interface
                 Avalonia.Threading.Dispatcher.UIThread.Invoke(() => ExportIcons(hicolor));
@@ -271,16 +271,16 @@ public static class SystemIntegration
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[leno-shot] não foi possível atualizar o ícone: {ex.Message}");
+            Console.Error.WriteLine($"[LenoShot] não foi possível atualizar o ícone: {ex.Message}");
         }
     }
 
     // ───────────── Início automático ─────────────
 
-    private static string AutostartFile => Path.Combine(Home, ".config", "autostart", "leno-shot.desktop");
+    private static string AutostartFile => Path.Combine(Home, ".config", "autostart", "LenoShot.desktop");
 
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    private const string RunValue = "Leno Shot";
+    private const string RunValue = "LenoShot";
 
     public static bool IsAutostartEnabled => OperatingSystem.IsWindows()
         ? Registry.CurrentUser.OpenSubKey(RunKey)?.GetValue(RunValue) is not null
@@ -304,10 +304,10 @@ public static class SystemIntegration
         File.WriteAllText(AutostartFile, $"""
             [Desktop Entry]
             Type=Application
-            Name=Leno Shot
+            Name=LenoShot
             Comment=Captura de tela
             Exec={LauncherPath}
-            Icon=leno-shot
+            Icon=LenoShot
             X-GNOME-Autostart-enabled=true
             NoDisplay=true
 
@@ -335,7 +335,7 @@ public static class SystemIntegration
 
     /// <summary>
     /// Liga os atalhos globais salvos. No Windows o próprio app registra os atalhos e executa o
-    /// comando; no Linux o GNOME chama `leno-shot capture`, então não há nada a fazer.
+    /// comando; no Linux o GNOME chama `LenoShot capture`, então não há nada a fazer.
     /// </summary>
     public static void RegisterShortcuts(Action<string> runCommand)
     {
@@ -347,7 +347,7 @@ public static class SystemIntegration
         {
             var accelerator = GetSavedShortcut(slot);
             if (!RegisterWindowsShortcut(slot, accelerator))
-                Console.Error.WriteLine($"[leno-shot] atalho {accelerator} indisponível (em uso por outro programa?)");
+                Console.Error.WriteLine($"[LenoShot] atalho {accelerator} indisponível (em uso por outro programa?)");
         }
     }
 
@@ -375,12 +375,12 @@ public static class SystemIntegration
     private const string KeybindingBase = "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/";
 
     private static string SlotPath(ShortcutSlot slot) =>
-        KeybindingBase + (slot == ShortcutSlot.Capture ? "leno-shot/" : "leno-shot-zoom/");
+        KeybindingBase + (slot == ShortcutSlot.Capture ? "LenoShot/" : "LenoShot-zoom/");
 
     private static string SlotSchema(ShortcutSlot slot) =>
         "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:" + SlotPath(slot);
 
-    private static string SlotName(ShortcutSlot slot) => slot == ShortcutSlot.Capture ? "Leno Shot" : "Leno Shot — zoom na gravação";
+    private static string SlotName(ShortcutSlot slot) => slot == ShortcutSlot.Capture ? "LenoShot" : "LenoShot — zoom na gravação";
 
     private static string SlotCommand(ShortcutSlot slot) => $"{LauncherPath} {SlotCommandName(slot)}";
 
@@ -456,7 +456,7 @@ public static class SystemIntegration
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[leno-shot] falha ao executar {file}: {ex.Message}");
+            Console.Error.WriteLine($"[LenoShot] falha ao executar {file}: {ex.Message}");
             return null;
         }
     }

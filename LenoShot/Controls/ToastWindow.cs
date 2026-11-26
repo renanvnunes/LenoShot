@@ -41,7 +41,7 @@ public sealed class ToastWindow : FloatingWindow
 
     private ToastWindow(string title, string body, string? imagePath)
     {
-        Title = "Leno Shot — aviso";
+        Title = "LenoShot — aviso";
         Background = Brushes.Transparent;
         TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
         ShowActivated = false;
@@ -155,7 +155,7 @@ public sealed class ToastWindow : FloatingWindow
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[leno-shot] não foi possível abrir o Explorer: {ex.Message}");
+            Console.Error.WriteLine($"[LenoShot] não foi possível abrir o Explorer: {ex.Message}");
         }
     }
 }

@@ -114,7 +114,7 @@ public sealed class RecordController
         if (!ScreenRecorder.IsFfmpegAvailable())
         {
             SystemIntegration.Notify("ffmpeg não encontrado", OperatingSystem.IsWindows()
-                ? "Instale o ffmpeg para gravar a tela (winget install Gyan.FFmpeg) ou coloque o ffmpeg.exe junto do Leno Shot"
+                ? "Instale o ffmpeg para gravar a tela (winget install Gyan.FFmpeg) ou coloque o ffmpeg.exe junto do LenoShot"
                 : "Instale o ffmpeg para gravar a tela (sudo apt install ffmpeg)");
             Close();
             return;
@@ -140,7 +140,7 @@ public sealed class RecordController
                 Background = accent,
                 TransparencyLevelHint = [WindowTransparencyLevel.Transparent],
                 ShowActivated = false,
-                Title = "Leno Shot — moldura",
+                Title = "LenoShot — moldura",
             };
             w.UseOverrideRedirect(); // sem isso o GNOME empurra a faixa para dentro da área
             w.PlaceAt(side, _request.Scaling);
