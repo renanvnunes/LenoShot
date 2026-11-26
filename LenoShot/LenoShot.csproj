@@ -7,7 +7,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>LenoShot</AssemblyName>
     <RootNamespace>LenoShot</RootNamespace>
-    <Version>0.6.1</Version>
+    <Version>0.6.2</Version>
     <Authors>Renan Nunes</Authors>
     <Copyright>© 2026 Renan Nunes</Copyright>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
