@@ -37,7 +37,7 @@ public static class CaptureOutput
         await Task.Run(() => bitmap.Save(file, PngBitmapEncoderOptions.Default));
 
         if (AppSettings.Current.NotifyOnSave)
-            SystemIntegration.Notify("Captura salva", file, imagePath: file);
+            SystemIntegration.Notify("Captura salva", file, imagePath: file, revealPath: file);
         return file;
     }
 }

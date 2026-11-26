@@ -18,13 +18,24 @@
         <!-- Antes de gravar -->
         <Button x:Name="MicButton" Classes="pill" Content="Microfone" MinWidth="0" ToolTip.Tip="Gravar o microfone" />
         <Button x:Name="SystemButton" Classes="pill" Content="Áudio do PC" MinWidth="0" ToolTip.Tip="Gravar o som que sai do computador" />
-        <Button x:Name="QualityButton" Classes="pill" Content="Original" MinWidth="0" ToolTip.Tip="Qualidade do vídeo: reduz a altura (nunca amplia). Clique para alternar" />
+        <ComboBox x:Name="QualityCombo" Classes="pill" ToolTip.Tip="Qualidade do vídeo: reduz a altura (nunca amplia)">
+          <ComboBoxItem Content="Original" />
+          <ComboBoxItem Content="1080p" />
+          <ComboBoxItem Content="720p" />
+          <ComboBoxItem Content="480p" />
+        </ComboBox>
+        <ComboBox x:Name="FormatCombo" Classes="pill" ToolTip.Tip="Formato do arquivo. GIF não tem áudio e tem duração limitada">
+          <ComboBoxItem Content="MP4" />
+          <ComboBoxItem Content="WebM" />
+          <ComboBoxItem Content="GIF" />
+        </ComboBox>
         <Button x:Name="CancelButton" Classes="pill" Content="Cancelar" MinWidth="0" />
         <Button x:Name="StartButton" Classes="pill primary" Content="Gravar" MinWidth="0" />
         <!-- Durante a gravação -->
         <Button x:Name="ZoomButton" Classes="pill" Content="Zoom" MinWidth="0" IsVisible="False" ToolTip.Tip="Lupa no mouse com o fundo desfocado. A tela fica parada enquanto o zoom está ligado" />
         <Button x:Name="DrawButton" Classes="pill" Content="Desenhar" MinWidth="0" IsVisible="False" ToolTip.Tip="Congela a área para marcar (setas, retângulos, texto…). Ao sair, a gravação volta ao vivo" />
         <Button x:Name="PauseButton" Classes="pill" Content="Pausar" MinWidth="0" IsVisible="False" />
+        <Button x:Name="DiscardButton" Classes="pill" Content="Descartar" MinWidth="0" IsVisible="False" ToolTip.Tip="Cancela a gravação sem salvar nada (clique duas vezes para confirmar)" />
         <Button x:Name="StopButton" Classes="pill primary" Content="Parar" MinWidth="0" IsVisible="False" />
       </StackPanel>
     </Grid>

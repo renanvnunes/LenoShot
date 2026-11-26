@@ -19,6 +19,8 @@ public partial class RecordPanel : FloatingWindow
     public event EventHandler? DrawToggled;
     public event EventHandler? ZoomToggled;
     public event EventHandler? QualityChanged;
+    public event EventHandler? FormatChanged;
+    public event EventHandler? DiscardRequested;
 
     /// <summary>Alturas oferecidas (0 = original), na ordem em que o botão alterna.</summary>
     public static readonly int[] QualityOptions = [0, 1080, 720, 480];
@@ -32,6 +34,18 @@ public partial class RecordPanel : FloatingWindow
     private bool _dragging;
     private PixelPoint _dragPointerStart;
     private PixelPoint _dragWindowStart;
+
+    /// <summary>Formatos oferecidos, na ordem em que o botão alterna.</summary>
+    public static readonly RecordFormat[] FormatOptions = [RecordFormat.Mp4, RecordFormat.WebM, RecordFormat.Gif];
+
+    public RecordFormat Format { get; private set; }
+
+    // Descartar pede um segundo clique para confirmar (evita perder a gravação sem querer)
+    private readonly Avalonia.Threading.DispatcherTimer _discardTimer = new() { Interval = TimeSpan.FromSeconds(3) };
+    private bool _discardArmed;
+
+    private bool _micWanted;
+    private bool _systemWanted;
 
     public bool MicEnabled { get; private set; }
     public bool SystemAudioEnabled { get; private set; }
@@ -47,12 +61,26 @@ public partial class RecordPanel : FloatingWindow
         StopButton.Click += (_, _) => StopRequested?.Invoke(this, EventArgs.Empty);
         DrawButton.Click += (_, _) => DrawToggled?.Invoke(this, EventArgs.Empty);
         ZoomButton.Click += (_, _) => ZoomToggled?.Invoke(this, EventArgs.Empty);
+        DiscardButton.Click += (_, _) =>
+        {
+            if (_discardArmed)
+            {
+                DisarmDiscard();
+                DiscardRequested?.Invoke(this, EventArgs.Empty);
+                return;
+            }
+            _discardArmed = true;
+            DiscardButton.Content = "Confirmar descarte";
+            DiscardButton.Classes.Set("primary", true);
+            _discardTimer.Start();
+        };
+        _discardTimer.Tick += (_, _) => DisarmDiscard();
         // Arrasta pelo fundo do painel. Botões tratam o próprio clique, então não iniciam o arraste.
         // Usa a posição global do mouse: a janela anda junto com o ponteiro, então a posição
         // relativa à janela não serve de referência.
         AddHandler(PointerPressedEvent, (_, e) =>
         {
-            if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed || IsInsideComboBox(e.Source))
                 return;
             _dragging = true;
             _dragPointerStart = X11Input.GetPointer();
@@ -75,29 +103,77 @@ public partial class RecordPanel : FloatingWindow
             Moved?.Invoke(this, CurrentRect);
         });
 
-        QualityButton.Click += (_, _) =>
+        QualityCombo.SelectionChanged += (_, _) =>
         {
-            var next = (Array.IndexOf(QualityOptions, QualityHeight) + 1) % QualityOptions.Length;
-            SetQuality(QualityOptions[next]);
+            if (QualityCombo.SelectedIndex < 0 || QualityOptions[QualityCombo.SelectedIndex] == QualityHeight)
+                return;
+            QualityHeight = QualityOptions[QualityCombo.SelectedIndex];
             QualityChanged?.Invoke(this, EventArgs.Empty);
+        };
+        FormatCombo.SelectionChanged += (_, _) =>
+        {
+            if (FormatCombo.SelectedIndex < 0 || FormatOptions[FormatCombo.SelectedIndex] == Format)
+                return;
+            SetFormat(FormatOptions[FormatCombo.SelectedIndex]);
+            FormatChanged?.Invoke(this, EventArgs.Empty);
         };
         MicButton.Click += (_, _) => SetAudio(!MicEnabled, SystemAudioEnabled);
         SystemButton.Click += (_, _) => SetAudio(MicEnabled, !SystemAudioEnabled);
     }
 
+    private static bool IsInsideComboBox(object? source)
+    {
+        for (var v = source as Avalonia.Visual; v is not null; v = Avalonia.VisualTree.VisualExtensions.GetVisualParent(v))
+            if (v is Avalonia.Controls.ComboBox)
+                return true;
+        return false;
+    }
+
+    private void DisarmDiscard()
+    {
+        _discardTimer.Stop();
+        _discardArmed = false;
+        DiscardButton.Content = "Descartar";
+        DiscardButton.Classes.Set("primary", false);
+    }
+
+    /// <summary>Escolhe o formato. GIF não tem som: os botões de áudio ficam desligados enquanto ele estiver escolhido.</summary>
+    public void SetFormat(RecordFormat format)
+    {
+        Format = format;
+        FormatCombo.SelectedIndex = Math.Max(0, Array.IndexOf(FormatOptions, format));
+        var gif = format == RecordFormat.Gif;
+        MicButton.IsEnabled = SystemButton.IsEnabled = !gif;
+        ApplyAudio();
+    }
+
     public void SetQuality(int maxHeight)
     {
         QualityHeight = Array.IndexOf(QualityOptions, maxHeight) >= 0 ? maxHeight : 0;
-        QualityButton.Content = QualityHeight == 0 ? "Original" : $"{QualityHeight}p";
+        QualityCombo.SelectedIndex = Array.IndexOf(QualityOptions, QualityHeight);
     }
 
+    /// <summary>Escolha de áudio do usuário (guardada mesmo com GIF, que grava sem som).</summary>
     public void SetAudio(bool mic, bool system)
     {
-        MicEnabled = mic;
-        SystemAudioEnabled = system;
-        MicButton.Classes.Set("primary", mic);
-        SystemButton.Classes.Set("primary", system);
+        _micWanted = mic;
+        _systemWanted = system;
+        ApplyAudio();
     }
+
+    /// <summary>Áudio que será gravado de fato: o escolhido, ou nenhum no GIF.</summary>
+    private void ApplyAudio()
+    {
+        var gif = Format == RecordFormat.Gif;
+        MicEnabled = _micWanted && !gif;
+        SystemAudioEnabled = _systemWanted && !gif;
+        MicButton.Classes.Set("primary", MicEnabled);
+        SystemButton.Classes.Set("primary", SystemAudioEnabled);
+    }
+
+    /// <summary>Escolha de áudio para salvar nas preferências (ignora o "sem som" do GIF).</summary>
+    public bool MicWanted => _micWanted;
+    public bool SystemAudioWanted => _systemWanted;
 
     public void SetReady(string detail)
     {
@@ -109,8 +185,8 @@ public partial class RecordPanel : FloatingWindow
     /// <summary>Troca para os controles de gravação em andamento.</summary>
     public void SetRecording()
     {
-        MicButton.IsVisible = SystemButton.IsVisible = QualityButton.IsVisible = CancelButton.IsVisible = StartButton.IsVisible = false;
-        ZoomButton.IsVisible = DrawButton.IsVisible = PauseButton.IsVisible = StopButton.IsVisible = true;
+        MicButton.IsVisible = SystemButton.IsVisible = QualityCombo.IsVisible = FormatCombo.IsVisible = CancelButton.IsVisible = StartButton.IsVisible = false;
+        ZoomButton.IsVisible = DrawButton.IsVisible = PauseButton.IsVisible = DiscardButton.IsVisible = StopButton.IsVisible = true;
         Pulse.Fill = Red;
     }
 
@@ -134,9 +210,10 @@ public partial class RecordPanel : FloatingWindow
         ToolbarHost.IsVisible = toolbar is not null;
     }
 
-    public void SetTime(TimeSpan elapsed, bool paused, string? note)
+    public void SetTime(TimeSpan elapsed, bool paused, string? note, TimeSpan? limit = null)
     {
-        StatusText.Text = (paused ? "Pausado  ·  " : "Gravando  ·  ") + FormatTime(elapsed);
+        StatusText.Text = (paused ? "Pausado  ·  " : "Gravando  ·  ") + FormatTime(elapsed)
+            + (limit is { } max ? " / " + FormatTime(max) : "");
         DetailText.Text = note ?? DescribeAudio();
         PauseButton.Content = paused ? "Continuar" : "Pausar";
         Pulse.Fill = paused ? Yellow : Red;
@@ -145,12 +222,13 @@ public partial class RecordPanel : FloatingWindow
 
     public void SetBusy(string status)
     {
-        ZoomButton.IsEnabled = DrawButton.IsEnabled = PauseButton.IsEnabled = StopButton.IsEnabled = false;
+        DisarmDiscard();
+        ZoomButton.IsEnabled = DrawButton.IsEnabled = PauseButton.IsEnabled = DiscardButton.IsEnabled = StopButton.IsEnabled = false;
         StatusText.Text = status;
         DetailText.Text = "";
     }
 
-    private string DescribeAudio() => (MicEnabled, SystemAudioEnabled) switch
+    private string DescribeAudio() => Format == RecordFormat.Gif ? "GIF  ·  sem áudio" : (MicEnabled, SystemAudioEnabled) switch
     {
         (true, true) => "Microfone e áudio do PC",
         (true, false) => "Só microfone",

@@ -15,6 +15,7 @@ internal static class Program
         if (args is ["--export-icons", var dir])
         {
             BuildAvaloniaApp().SetupWithoutStarting();
+            AccentTheme.UseDefault(); // o pacote sempre leva o ícone padrão, não a cor de quem empacota
             SystemIntegration.ExportIcons(dir);
             return 0;
         }

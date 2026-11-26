@@ -48,14 +48,14 @@
     <Style Selector="Button.link">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="Padding" Value="0" />
-      <Setter Property="Foreground" Value="#8E96FF" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
       <Setter Property="FontSize" Value="13" />
       <Setter Property="Cursor" Value="Hand" />
       <Setter Property="HorizontalAlignment" Value="Right" />
     </Style>
     <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="Foreground" Value="#B4B9FF" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentTextHover}" />
     </Style>
   </c:ChromeWindow.Styles>
 

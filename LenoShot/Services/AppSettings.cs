@@ -20,6 +20,15 @@ public sealed class AppSettings
     public bool RecordMic { get; set; }
     public bool RecordSystemAudio { get; set; } = true;
 
+    /// <summary>Formato do arquivo: "mp4", "webm" ou "gif".</summary>
+    public string RecordFormat { get; set; } = "mp4";
+
+    /// <summary>Duração máxima de um GIF, em segundos (a gravação para sozinha ao chegar nela).</summary>
+    public int GifMaxSeconds { get; set; } = 10;
+
+    /// <summary>Cor de destaque do app (botões, seleção, ícone).</summary>
+    public string AccentColor { get; set; } = AccentTheme.DefaultHex;
+
     public string DefaultColor { get; set; } = "#FF453A";
     public double DefaultThickness { get; set; } = 4;
     public bool NotifyOnSave { get; set; } = true;

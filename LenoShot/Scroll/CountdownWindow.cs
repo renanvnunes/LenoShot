@@ -96,7 +96,7 @@ public sealed class CountdownWindow : FloatingWindow
                     g.ArcTo(endPoint, new Size(ringRadius, ringRadius), 0, angle > Math.PI, SweepDirection.Clockwise);
                     g.EndFigure(false);
                 }
-                context.DrawGeometry(null, new Pen(new SolidColorBrush(Color.Parse("#6E7BFF")), 4, lineCap: PenLineCap.Round), arc);
+                context.DrawGeometry(null, new Pen(new SolidColorBrush(LenoShot.Services.AccentTheme.Color), 4, lineCap: PenLineCap.Round), arc);
             }
 
             var text = new FormattedText(Seconds.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture,

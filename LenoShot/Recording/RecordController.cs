@@ -17,7 +17,7 @@ namespace LenoShot.Recording;
 public sealed class RecordController
 {
     private const int FrameThickness = 2; // moldura fina e discreta, por fora da área gravada
-    private const int PanelWidth = 660; // cabe: áudio, qualidade, cancelar e gravar
+    private const int PanelWidth = 800; // cabe: áudio, qualidade, formato, cancelar e gravar
 
     private readonly RecordRequest _request;
     private readonly List<FloatingWindow> _frame = [];
@@ -50,8 +50,11 @@ public sealed class RecordController
         var settings = AppSettings.Current;
         _panel.SetAudio(settings.RecordMic, settings.RecordSystemAudio);
         _panel.SetQuality(settings.RecordMaxHeight);
+        _panel.SetFormat(ParseFormat(settings.RecordFormat));
         UpdateReadyDetail();
         _panel.QualityChanged += (_, _) => UpdateReadyDetail();
+        _panel.FormatChanged += (_, _) => UpdateReadyDetail();
+        _panel.DiscardRequested += async (_, _) => await CancelRecordingAsync();
 
         _panel.StartRequested += async (_, _) => await StartAsync();
         _panel.CancelRequested += (_, _) => Close();
@@ -86,16 +89,25 @@ public sealed class RecordController
     {
         var a = _request.Area;
         var max = _panel.QualityHeight;
-        if (max > 0 && a.Height > max)
-        {
-            var w = (int)Math.Round(a.Width * (double)max / a.Height / 2) * 2;
-            _panel.SetReady($"{a.Width} × {a.Height} → {w} × {max} px");
-        }
-        else
-        {
-            _panel.SetReady($"{a.Width} × {a.Height} px");
-        }
+        var gif = _panel.Format == RecordFormat.Gif;
+        // O GIF ainda é limitado a uma altura menor, para não pesar
+        if (gif && (max == 0 || max > ScreenRecorder.GifMaxHeight))
+            max = ScreenRecorder.GifMaxHeight;
+
+        var size = max > 0 && a.Height > max
+            ? $"{a.Width} × {a.Height} → {(int)Math.Round(a.Width * (double)max / a.Height / 2) * 2} × {max} px"
+            : $"{a.Width} × {a.Height} px";
+        _panel.SetReady(gif ? $"{size}  ·  GIF até {GifLimit.TotalSeconds:0}s, sem áudio" : size);
     }
+
+    private static TimeSpan GifLimit => TimeSpan.FromSeconds(Math.Clamp(AppSettings.Current.GifMaxSeconds, 1, 120));
+
+    public static RecordFormat ParseFormat(string? value) => value?.ToLowerInvariant() switch
+    {
+        "webm" => RecordFormat.WebM,
+        "gif" => RecordFormat.Gif,
+        _ => RecordFormat.Mp4,
+    };
 
     public void Show()
     {
@@ -109,7 +121,7 @@ public sealed class RecordController
         var a = _request.Area;
         var t = FrameThickness;
         // Cor de destaque do app, translúcida: marca a área sem chamar atenção
-        var accent = new SolidColorBrush(Color.FromArgb(170, 0x6E, 0x7B, 0xFF));
+        var accent = new SolidColorBrush(AccentTheme.WithAlpha(170));
 
         // Quatro faixas finas por fora da área, para não aparecerem no vídeo
         PixelRect[] sides =
@@ -282,9 +294,10 @@ public sealed class RecordController
         _busy = true;
 
         var settings = AppSettings.Current;
-        settings.RecordMic = _panel.MicEnabled;
-        settings.RecordSystemAudio = _panel.SystemAudioEnabled;
+        settings.RecordMic = _panel.MicWanted;
+        settings.RecordSystemAudio = _panel.SystemAudioWanted;
         settings.RecordMaxHeight = _panel.QualityHeight;
+        settings.RecordFormat = ScreenRecorder.Extension(_panel.Format);
         settings.Save();
 
         _panel.SetRecording();
@@ -298,7 +311,9 @@ public sealed class RecordController
         // Última conferência antes de gravar: nada de moldura nem painel dentro da área
         HideIntrudingWindows();
 
-        var recorder = new ScreenRecorder(_request.Area, settings.RecordFps, _panel.MicEnabled, _panel.SystemAudioEnabled, _panel.QualityHeight);
+        var format = _panel.Format;
+        var recorder = new ScreenRecorder(_request.Area, settings.RecordFps, _panel.MicEnabled, _panel.SystemAudioEnabled,
+            _panel.QualityHeight, format, format == RecordFormat.Gif ? GifLimit : null);
         if (!await recorder.StartAsync())
         {
             SystemIntegration.Notify("Não foi possível gravar", Truncate(recorder.LastLog));
@@ -309,7 +324,7 @@ public sealed class RecordController
 
         _recorder = recorder;
         _note = recorder.Warning;
-        _panel.ZoomButton.IsEnabled = _panel.DrawButton.IsEnabled = _panel.PauseButton.IsEnabled = _panel.StopButton.IsEnabled = true;
+        _panel.ZoomButton.IsEnabled = _panel.DrawButton.IsEnabled = _panel.PauseButton.IsEnabled = _panel.DiscardButton.IsEnabled = _panel.StopButton.IsEnabled = true;
         _timer.Start();
         UpdateTime();
         _busy = false;
@@ -352,13 +367,35 @@ public sealed class RecordController
         _draw?.SetDrawing(false);
         _zoom?.Dismiss();
         _panel.Show();
-        _panel.SetBusy("Salvando o vídeo…");
+        _panel.SetBusy(recorder.Format == RecordFormat.Mp4 ? "Salvando o vídeo…" : $"Convertendo para {ScreenRecorder.Extension(recorder.Format).ToUpperInvariant()}…");
 
         var file = await recorder.FinishAsync();
         if (file is null)
             SystemIntegration.Notify("Gravação vazia", Truncate(recorder.LastLog));
         else if (AppSettings.Current.NotifyOnSave)
-            SystemIntegration.Notify("Gravação salva", file);
+            SystemIntegration.Notify("Gravação salva", file, revealPath: file);
+
+        _recorder = null;
+        _busy = false;
+        StateChanged?.Invoke(this, EventArgs.Empty);
+        Close();
+    }
+
+    /// <summary>Descarta a gravação em andamento: nada é salvo.</summary>
+    public async Task CancelRecordingAsync()
+    {
+        if (_recorder is null || _busy)
+            return;
+        _busy = true;
+        _timer.Stop();
+
+        var recorder = _recorder;
+        _draw?.SetDrawing(false);
+        _zoom?.Dismiss();
+        _panel.SetBusy("Descartando…");
+
+        await recorder.CancelAsync();
+        SystemIntegration.Notify("Gravação descartada", "Nenhum arquivo foi salvo");
 
         _recorder = null;
         _busy = false;
@@ -370,7 +407,11 @@ public sealed class RecordController
     {
         if (_recorder is null)
             return;
-        _panel.SetTime(_recorder.Elapsed, _recorder.IsPaused, _note);
+        _panel.SetTime(_recorder.Elapsed, _recorder.IsPaused, _note, _recorder.MaxDuration);
+
+        // GIF: para sozinho ao chegar na duração máxima
+        if (_recorder.MaxDuration is { } max && _recorder.Elapsed >= max && !_busy)
+            _ = StopAsync();
     }
 
     private void Close()

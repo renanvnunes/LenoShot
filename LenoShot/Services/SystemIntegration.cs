@@ -17,14 +17,48 @@ public static class SystemIntegration
 
     // ───────────── Notificações ─────────────
 
-    public static void Notify(string title, string body, string? imagePath = null)
+    /// <summary>
+    /// Mostra uma notificação. Com <paramref name="revealPath"/>, clicar nela (ou no botão
+    /// "Mostrar na pasta") abre o gerenciador de arquivos com o arquivo selecionado.
+    /// </summary>
+    public static void Notify(string title, string body, string? imagePath = null, string? revealPath = null)
     {
         var args = new List<string> { "--app-name=Leno Shot", "--expire-time=3000" };
         if (imagePath is not null)
             args.Add($"--icon={imagePath}"); // o GNOME mostra a miniatura da imagem salva
+        if (revealPath is not null)
+        {
+            // "default" é o clique no corpo da notificação; com ações o notify-send espera a resposta
+            args.Add("--action=default=Mostrar na pasta");
+            args.Add("--action=reveal=Mostrar na pasta");
+        }
         args.Add(title);
         args.Add(body);
-        _ = Run("notify-send", args);
+
+        if (revealPath is null)
+        {
+            _ = Run("notify-send", args);
+            return;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            var action = (await Run("notify-send", args))?.Trim();
+            if (action is "default" or "reveal")
+                await RevealInFolderAsync(revealPath);
+        });
+    }
+
+    /// <summary>Abre a pasta do arquivo, com ele selecionado quando o gerenciador de arquivos permite.</summary>
+    public static async Task RevealInFolderAsync(string path)
+    {
+        // Interface padrão (Nautilus, Nemo, Dolphin…): abre a pasta já selecionando o arquivo
+        var uri = new Uri(path).AbsoluteUri.Replace("'", "%27");
+        var result = await Run("gdbus", ["call", "--session", "--dest", "org.freedesktop.FileManager1",
+            "--object-path", "/org/freedesktop/FileManager1", "--method", "org.freedesktop.FileManager1.ShowItems",
+            $"['{uri}']", ""]);
+        if (string.IsNullOrWhiteSpace(result))
+            await Run("xdg-open", [Path.GetDirectoryName(path) ?? path]);
     }
 
     // ───────────── Ícone e menu de aplicativos ─────────────
@@ -96,6 +130,51 @@ public static class SystemIntegration
         catch (Exception ex)
         {
             Console.Error.WriteLine($"[leno-shot] não foi possível instalar o ícone: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Ícone do menu de aplicativos na cor escolhida. O pacote .deb instala o ícone padrão em
+    /// /usr/share (só o root altera); uma cópia em ~/.local/share/icons tem prioridade sobre ele.
+    /// Com a cor padrão a cópia é removida e volta a valer o ícone do sistema.
+    /// </summary>
+    public static void UpdateDesktopIcons()
+    {
+        try
+        {
+            var hicolor = Path.Combine(Home, ".local", "share", "icons", "hicolor");
+            if (IsSystemInstall && AccentTheme.IsDefault)
+            {
+                var removed = false;
+                foreach (var size in IconSizes)
+                {
+                    var file = Path.Combine(hicolor, $"{size}x{size}", "apps", "leno-shot.png");
+                    if (File.Exists(file))
+                    {
+                        File.Delete(file);
+                        removed = true;
+                    }
+                }
+                if (!removed)
+                    return;
+            }
+            else if (IsSystemInstall || File.Exists(Path.Combine(hicolor, "256x256", "apps", "leno-shot.png")))
+            {
+                // Desenhar exige a thread da interface
+                Avalonia.Threading.Dispatcher.UIThread.Invoke(() => ExportIcons(hicolor));
+            }
+            else
+            {
+                return; // build de desenvolvimento sem ícone instalado: nada a atualizar
+            }
+
+            // Avisa o sistema que os ícones mudaram
+            Directory.SetLastWriteTimeUtc(hicolor, DateTime.UtcNow);
+            _ = Run("gtk-update-icon-cache", ["-f", "-t", hicolor]);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[leno-shot] não foi possível atualizar o ícone: {ex.Message}");
         }
     }
 

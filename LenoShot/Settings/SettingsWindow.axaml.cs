@@ -28,6 +28,7 @@ public partial class SettingsWindow : ChromeWindow
 
     private static readonly int[] DelayOptions = [0, 3, 5, 10];
     private static readonly int[] FpsOptions = [15, 24, 30, 60];
+    private static readonly int[] GifLimitOptions = [5, 10, 15, 30];
 
     private readonly AppSettings _settings = AppSettings.Current;
     private readonly Dictionary<SystemIntegration.ShortcutSlot, string?> _shortcuts = new();
@@ -64,6 +65,10 @@ public partial class SettingsWindow : ChromeWindow
         FpsCombo.SelectedIndex = Math.Max(0, Array.IndexOf(FpsOptions, _settings.RecordFps));
         FpsCombo.SelectionChanged += (_, _) =>
             Update(s => s.RecordFps = FpsOptions[Math.Max(0, FpsCombo.SelectedIndex)]);
+        var gifIndex = Array.IndexOf(GifLimitOptions, _settings.GifMaxSeconds);
+        GifLimitCombo.SelectedIndex = gifIndex >= 0 ? gifIndex : 1;
+        GifLimitCombo.SelectionChanged += (_, _) =>
+            Update(s => s.GifMaxSeconds = GifLimitOptions[Math.Max(0, GifLimitCombo.SelectedIndex)]);
 
         // Notificações
         NotifySaveToggle.IsChecked = _settings.NotifyOnSave;
@@ -90,6 +95,9 @@ public partial class SettingsWindow : ChromeWindow
         };
 
         BuildColorSwatches();
+        BuildAccentSwatches();
+        AccentTheme.Changed += OnAccentChanged;
+        Closed += (_, _) => AccentTheme.Changed -= OnAccentChanged;
         BuildKeysGrid();
 
         // Atalhos globais (captura e zoom)
@@ -183,6 +191,38 @@ public partial class SettingsWindow : ChromeWindow
             };
             ColorSwatches.Children.Add(button);
         }
+    }
+
+    // ───────────── Cor do app ─────────────
+
+    private void BuildAccentSwatches()
+    {
+        var current = AccentTheme.ToHex(AccentTheme.Color);
+        foreach (var (name, hex) in AccentTheme.Presets)
+        {
+            var button = new Button
+            {
+                Classes = { "swatch" },
+                Content = new Border { Classes = { "ring" }, Child = new Ellipse { Fill = SolidColorBrush.Parse(hex) } },
+            };
+            ToolTip.SetTip(button, name);
+            button.Classes.Set("selected", string.Equals(hex, current, StringComparison.OrdinalIgnoreCase));
+            button.Click += (_, _) =>
+            {
+                foreach (var b in AccentSwatches.Children.OfType<Button>())
+                    b.Classes.Set("selected", b == button);
+                AccentTheme.Set(AccentTheme.Parse(hex));
+            };
+            AccentSwatches.Children.Add(button);
+        }
+    }
+
+    private void OnAccentChanged(object? sender, EventArgs e)
+    {
+        AppIconImage.Source = AppIcon.CreateBitmap();
+        AccentHint.Text = SystemIntegration.IsSystemInstall
+            ? "Muda botões, destaques e o ícone. O ícone do menu de aplicativos pode levar um tempo (ou um novo login) para mudar"
+            : "Muda botões, destaques e o ícone";
     }
 
     // ───────────── Atalhos da captura (referência) ─────────────

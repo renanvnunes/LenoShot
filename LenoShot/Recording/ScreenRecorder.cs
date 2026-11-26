@@ -5,10 +5,19 @@ using LenoShot.Services;
 
 namespace LenoShot.Recording;
 
+/// <summary>Formato do arquivo final da gravação.</summary>
+public enum RecordFormat
+{
+    Mp4,
+    WebM,
+    Gif,
+}
+
 /// <summary>
 /// Grava uma área da tela com o ffmpeg (x11grab), com microfone e/ou áudio do computador.
 /// A pausa funciona gravando em segmentos: pausar encerra o segmento atual, continuar abre
-/// outro, e ao parar tudo é emendado num único MP4 (sem recodificar).
+/// outro, e ao parar tudo é emendado num único arquivo. MP4 é emendado sem recodificar;
+/// WebM (VP9/Opus) e GIF são convertidos a partir dos segmentos no final.
 /// </summary>
 public sealed class ScreenRecorder
 {
@@ -44,8 +53,18 @@ public sealed class ScreenRecorder
 
     private readonly int _maxHeight;
 
-    public ScreenRecorder(PixelRect area, int fps, bool mic, bool systemAudio, int maxHeight = 0)
+    /// <summary>GIF: quadros por segundo e altura máxima, para o arquivo não ficar pesado.</summary>
+    public const int GifFps = 12;
+    public const int GifMaxHeight = 480;
+
+    public ScreenRecorder(PixelRect area, int fps, bool mic, bool systemAudio, int maxHeight = 0,
+        RecordFormat format = RecordFormat.Mp4, TimeSpan? maxDuration = null)
     {
+        Format = format;
+        MaxDuration = maxDuration;
+        // GIF não tem som
+        if (format == RecordFormat.Gif)
+            mic = systemAudio = false;
         _maxHeight = maxHeight;
         // yuv420p exige largura e altura pares
         _area = new PixelRect(area.X, area.Y, Math.Max(2, area.Width & ~1), Math.Max(2, area.Height & ~1));
@@ -53,6 +72,11 @@ public sealed class ScreenRecorder
         _mic = mic;
         _system = systemAudio;
     }
+
+    public RecordFormat Format { get; }
+
+    /// <summary>Duração máxima (usada no GIF); null = sem limite.</summary>
+    public TimeSpan? MaxDuration { get; }
 
     public bool IsPaused { get; private set; }
     public bool IsRunning => _process is { HasExited: false };
@@ -123,14 +147,37 @@ public sealed class ScreenRecorder
 
             var dir = AppSettings.Current.VideoFolder;
             Directory.CreateDirectory(dir);
-            var output = Path.Combine(dir, $"leno-shot_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.mp4");
+            var output = Path.Combine(dir, $"leno-shot_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.{Extension(Format)}");
 
             var list = Path.Combine(_tempDir, "list.txt");
             await File.WriteAllLinesAsync(list, valid.Select(f => $"file '{f.Replace("'", "'\\''")}'"));
 
-            var ok = await RunFfmpegAsync(
-                ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", list,
-                 "-c", "copy", "-movflags", "+faststart", output]);
+            var args = new List<string> { "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", list };
+            if (MaxDuration is { } max)
+                args.AddRange(["-t", max.TotalSeconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)]);
+
+            switch (Format)
+            {
+                case RecordFormat.WebM:
+                    // VP9 em qualidade constante; "realtime" + cpu-used alto para não demorar demais
+                    args.AddRange(["-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "32", "-deadline", "realtime",
+                        "-cpu-used", "8", "-row-mt", "1", "-pix_fmt", "yuv420p",
+                        "-c:a", "libopus", "-b:a", "128k"]);
+                    break;
+                case RecordFormat.Gif:
+                    // Paleta própria do vídeo (bem melhor que a paleta padrão), poucos quadros e altura limitada
+                    args.AddRange(["-an", "-filter_complex",
+                        $"fps={GifFps},scale=-2:'min(ih,{GifMaxHeight})':flags=lanczos,split[a][b];" +
+                        "[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle",
+                        "-loop", "0"]);
+                    break;
+                default:
+                    args.AddRange(["-c", "copy", "-movflags", "+faststart"]);
+                    break;
+            }
+            args.Add(output);
+
+            var ok = await RunFfmpegAsync(args);
             return ok && File.Exists(output) ? output : null;
         }
         finally
@@ -146,6 +193,13 @@ public sealed class ScreenRecorder
         await StopSegmentAsync();
         Cleanup();
     }
+
+    public static string Extension(RecordFormat format) => format switch
+    {
+        RecordFormat.WebM => "webm",
+        RecordFormat.Gif => "gif",
+        _ => "mp4",
+    };
 
     // ───────────── Segmentos ─────────────
 

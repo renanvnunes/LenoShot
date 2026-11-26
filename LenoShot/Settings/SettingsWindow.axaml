@@ -63,11 +63,11 @@
       <Setter Property="Foreground" Value="#F5F5F7" />
     </Style>
     <Style Selector="Button.pill.recording">
-      <Setter Property="Background" Value="#6E7BFF" />
+      <Setter Property="Background" Value="{DynamicResource Accent}" />
       <Setter Property="Foreground" Value="White" />
     </Style>
     <Style Selector="Button.pill.recording:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#8590FF" />
+      <Setter Property="Background" Value="{DynamicResource AccentHover}" />
       <Setter Property="Foreground" Value="White" />
     </Style>
     <Style Selector="ToggleSwitch">
@@ -91,6 +91,22 @@
         </StackPanel>
         <Button Grid.Column="1" Classes="pill" x:Name="AboutButton" Content="Sobre" VerticalAlignment="Center" />
       </Grid>
+
+      <!-- Aparência -->
+      <StackPanel>
+        <TextBlock Classes="section" Text="APARÊNCIA" />
+        <Border Classes="group">
+          <StackPanel>
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                <TextBlock Classes="label" Text="Cor do app" />
+                <TextBlock Classes="hint" x:Name="AccentHint" Text="Muda botões, destaques e o ícone" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" x:Name="AccentSwatches" Orientation="Horizontal" VerticalAlignment="Center" />
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
 
       <!-- Captura -->
       <StackPanel>
@@ -178,6 +194,19 @@
                 <ComboBoxItem Content="24 fps" />
                 <ComboBoxItem Content="30 fps" />
                 <ComboBoxItem Content="60 fps" />
+              </ComboBox>
+            </Grid>
+            <Rectangle Classes="sep" />
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                <TextBlock Classes="label" Text="Duração máxima do GIF" />
+                <TextBlock Classes="hint" Text="O formato (MP4, WebM ou GIF) é escolhido no painel ao gravar. O GIF para sozinho ao chegar nesse tempo" />
+              </StackPanel>
+              <ComboBox Grid.Column="1" x:Name="GifLimitCombo" MinWidth="110" VerticalAlignment="Center">
+                <ComboBoxItem Content="5 s" />
+                <ComboBoxItem Content="10 s" />
+                <ComboBoxItem Content="15 s" />
+                <ComboBoxItem Content="30 s" />
               </ComboBox>
             </Grid>
             <Rectangle Classes="sep" />

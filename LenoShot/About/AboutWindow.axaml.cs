@@ -16,6 +16,9 @@ public partial class AboutWindow : ChromeWindow
         InitializeComponent();
         Icon = AppIcon.Create();
         AppIconImage.Source = AppIcon.CreateBitmap(256);
+        EventHandler onAccent = (_, _) => AppIconImage.Source = AppIcon.CreateBitmap(256);
+        AccentTheme.Changed += onAccent;
+        Closed += (_, _) => AccentTheme.Changed -= onAccent;
 
         var version = AppVersion;
         VersionText.Text = $"Versão {version}";

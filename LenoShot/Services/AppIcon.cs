@@ -6,7 +6,7 @@ using Avalonia.Media.Imaging;
 namespace LenoShot.Services;
 
 /// <summary>
-/// Ícone do app desenhado em vetor: "squircle" chapado em índigo, cantos de visor e um
+/// Ícone do app desenhado em vetor: "squircle" chapado na cor do app, cantos de visor e um
 /// obturador no centro. Gera qualquer tamanho sem arquivos de imagem.
 /// </summary>
 internal static class AppIcon
@@ -33,7 +33,7 @@ internal static class AppIcon
     private static void Draw(DrawingContext ctx)
     {
         // "Squircle" (superelipse), o formato dos ícones modernos do macOS
-        ctx.DrawGeometry(new SolidColorBrush(Color.Parse("#5B5BD6")), null, Squircle(50, 50, 44, 5));
+        ctx.DrawGeometry(new SolidColorBrush(AccentTheme.IconColor), null, Squircle(50, 50, 44, 5));
 
         // Cantos do visor, finos e com pontas arredondadas
         var pen = new Pen(Brushes.White, 5.5, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round);

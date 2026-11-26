@@ -12,6 +12,7 @@
   <Application.Styles>
     <FluentTheme>
       <FluentTheme.Palettes>
+        <!-- Cor inicial; a escolhida pelo usuário é aplicada pelo AccentTheme -->
         <ColorPaletteResources x:Key="Dark" Accent="#6E7BFF" />
       </FluentTheme.Palettes>
     </FluentTheme>

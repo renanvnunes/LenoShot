@@ -20,7 +20,11 @@ public partial class App : Application
     private SingleInstance? _ipc;
     private CaptureSession? _session;
 
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+        AccentTheme.Load();
+    }
 
     public override void OnFrameworkInitializationCompleted()
     {
@@ -38,6 +42,17 @@ public partial class App : Application
 
             SetupTray(desktop);
             SystemIntegration.InstallDesktopEntry();
+            _ = Task.Run(SystemIntegration.UpdateDesktopIcons);
+
+            // Nova cor: troca o ícone da bandeja e o das janelas abertas
+            AccentTheme.Changed += (_, _) =>
+            {
+                if (_tray is not null)
+                    _tray.Icon = AppIcon.Create();
+                foreach (var w in desktop.Windows)
+                    if (w.Icon is not null)
+                        w.Icon = AppIcon.Create();
+            };
 
             _ipc = SingleInstance.StartServer(cmd => Dispatcher.UIThread.Post(() => HandleCommand(cmd)));
 
@@ -76,6 +91,9 @@ public partial class App : Application
                 break;
             case "record-stop":
                 _ = _record?.StopAsync();
+                break;
+            case "record-cancel":
+                _ = _record?.CancelRecordingAsync();
                 break;
             case "settings":
                 OpenSettings();
@@ -153,6 +171,8 @@ public partial class App : Application
     private NativeMenuItem? _drawItem;
     private NativeMenuItem? _pauseItem;
     private NativeMenuItem? _stopItem;
+    private NativeMenuItem? _cancelItem;
+    private TrayIcon? _tray;
 
     private void StartRecording(RecordRequest request)
     {
@@ -199,6 +219,8 @@ public partial class App : Application
         }
         if (_stopItem is not null)
             _stopItem.IsEnabled = recording;
+        if (_cancelItem is not null)
+            _cancelItem.IsEnabled = recording;
     }
 
     private SettingsWindow? _settingsWindow;
@@ -257,6 +279,8 @@ public partial class App : Application
         _pauseItem.Click += (_, _) => _ = _record?.TogglePauseAsync();
         _stopItem = new NativeMenuItem("Parar gravação") { IsEnabled = false };
         _stopItem.Click += (_, _) => _ = _record?.StopAsync();
+        _cancelItem = new NativeMenuItem("Descartar gravação") { IsEnabled = false };
+        _cancelItem.Click += (_, _) => _ = _record?.CancelRecordingAsync();
 
         var settingsItem = new NativeMenuItem("Configurações…");
         settingsItem.Click += (_, _) => OpenSettings();
@@ -267,11 +291,11 @@ public partial class App : Application
         var quitItem = new NativeMenuItem("Sair");
         quitItem.Click += (_, _) => desktop.Shutdown();
 
-        var tray = new TrayIcon
+        var tray = _tray = new TrayIcon
         {
             Icon = AppIcon.Create(),
             ToolTipText = "Leno Shot",
-            Menu = new NativeMenu { Items = { captureItem, delayItem, new NativeMenuItemSeparator(), recordItem, _zoomItem, _drawItem, _pauseItem, _stopItem, new NativeMenuItemSeparator(), settingsItem, aboutItem, new NativeMenuItemSeparator(), quitItem } },
+            Menu = new NativeMenu { Items = { captureItem, delayItem, new NativeMenuItemSeparator(), recordItem, _zoomItem, _drawItem, _pauseItem, _stopItem, _cancelItem, new NativeMenuItemSeparator(), settingsItem, aboutItem, new NativeMenuItemSeparator(), quitItem } },
         };
         // Durante uma gravação, clicar no ícone da bandeja para a gravação
         tray.Clicked += (_, _) =>

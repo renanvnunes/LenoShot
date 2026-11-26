@@ -152,7 +152,7 @@ public sealed class ScrollCaptureController
     {
         var a = _request.Area;
         var t = FrameThickness;
-        var accent = new SolidColorBrush(Color.Parse("#6E7BFF"));
+        var accent = new SolidColorBrush(LenoShot.Services.AccentTheme.Color);
 
         // Quatro faixas finas em volta (por fora) da área, para não aparecerem na captura
         PixelRect[] sides =
