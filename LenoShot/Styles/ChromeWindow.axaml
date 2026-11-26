@@ -38,7 +38,8 @@
         <Panel>
           <Border x:Name="PART_Frame"
                   Background="#1C1C1E"
-                  BorderThickness="0"
+                  BorderBrush="#3A3A3C"
+                  BorderThickness="1"
                   CornerRadius="12" ClipToBounds="True">
             <Grid RowDefinitions="Auto,*">
               <!-- Barra de título -->
