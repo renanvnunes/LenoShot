@@ -8,8 +8,7 @@ namespace LenoShot.About;
 /// <summary>Tela "Sobre": versão, criador, licença, tecnologias e link do código-fonte.</summary>
 public partial class AboutWindow : ChromeWindow
 {
-    // Trocar pelo endereço do repositório quando ele existir
-    public const string RepositoryUrl = "https://github.com";
+    public const string RepositoryUrl = "https://github.com/renanvnunes/LenoShot";
 
     public AboutWindow()
     {
@@ -36,11 +35,19 @@ public partial class AboutWindow : ChromeWindow
         GitHubButton.Click += async (_, _) => await OpenRepositoryAsync();
 
         foreach (var tech in Technologies())
-            TechPanel.Children.Add(new Border { Classes = { "chip" }, Child = new TextBlock { Text = tech } });
+            TechPanel.Children.Add(
+                new Border
+                {
+                    Classes = { "chip" },
+                    Child = new TextBlock { Text = tech },
+                }
+            );
     }
 
     public static string AppVersion =>
-        Assembly.GetEntryAssembly()?.GetName().Version is { } v ? $"{v.Major}.{v.Minor}.{v.Build}" : "0.0.0";
+        Assembly.GetEntryAssembly()?.GetName().Version is { } v
+            ? $"{v.Major}.{v.Minor}.{v.Build}"
+            : "0.0.0";
 
     /// <summary>Tecnologias usadas, com as versões lidas do próprio app em execução.</summary>
     private static IEnumerable<string> Technologies()
@@ -62,7 +69,10 @@ public partial class AboutWindow : ChromeWindow
 
         // O arquivo tem quebras fixas em ~80 colunas; junta as linhas de cada parágrafo
         // para o texto fluir na largura do cartão.
-        var paragraphs = reader.ReadToEnd().Replace("\r", "").Trim()
+        var paragraphs = reader
+            .ReadToEnd()
+            .Replace("\r", "")
+            .Trim()
             .Split("\n\n")
             .Select(p => string.Join(' ', p.Split('\n', StringSplitOptions.TrimEntries)));
         return string.Join("\n\n", paragraphs);

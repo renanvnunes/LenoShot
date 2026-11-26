@@ -50,6 +50,12 @@ public sealed class AppSettings
     /// <summary>Linux: o atalho padrão (Print) já foi aplicado uma vez; depois disso vale a escolha do usuário.</summary>
     public bool LinuxShortcutInitialized { get; set; }
 
+    // ───────────── Atualizações ─────────────
+
+    /// <summary>Busca nova versão ao iniciar (no máximo 1 vez por dia) e, no Windows, instala sozinha.</summary>
+    public bool AutoUpdate { get; set; }
+    public DateTime LastUpdateCheck { get; set; }
+
     // ───────────── Persistência ─────────────
 
     private static readonly string FilePath = Path.Combine(

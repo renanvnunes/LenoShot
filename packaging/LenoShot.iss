@@ -47,7 +47,11 @@ LicenseFile=..\LICENSE
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
-; O app é fechado pelo comando "quit" (ver [Code]); o Restart Manager não precisa fazer nada
+; O app é fechado pelo comando "quit" (ver [Run]
+; Atualização silenciosa (feita pelo próprio app): abre o LenoShot de novo na bandeja
+Filename: "{app}\{#AppExe}"; Parameters: "daemon"; Flags: nowait runasoriginaluser; Check: WizardSilent
+
+[Code]); o Restart Manager não precisa fazer nada
 CloseApplications=no
 
 [Languages]

@@ -44,6 +44,7 @@ public partial class App : Application
             SystemIntegration.InstallDesktopEntry();
             _ = Task.Run(SystemIntegration.UpdateDesktopIcons);
             _ = Task.Run(SystemIntegration.EnsureLinuxDefaultShortcutAsync);
+            _ = Task.Run(UpdateService.AutoUpdateAsync);
 
             // Nova cor: troca o ícone da bandeja e o das janelas abertas
             AccentTheme.Changed += (_, _) =>

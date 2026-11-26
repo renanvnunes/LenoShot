@@ -84,6 +84,7 @@ public partial class SettingsWindow : ChromeWindow
         // Início automático
         AutostartToggle.IsChecked = SystemIntegration.IsAutostartEnabled;
         AutostartToggle.IsCheckedChanged += (_, _) => SystemIntegration.SetAutostart(AutostartToggle.IsChecked == true);
+        SetupUpdates();
 
         // Espessura
         ThicknessSlider.Value = _settings.DefaultThickness;
@@ -255,6 +256,72 @@ public partial class SettingsWindow : ChromeWindow
             KeysGrid.Children.Add(cap);
             KeysGrid.Children.Add(label);
         }
+    }
+
+    // ───────────── Atualizações ─────────────
+
+    private void SetupUpdates()
+    {
+        AutoUpdateHint.Text = OperatingSystem.IsWindows()
+            ? "Busca uma vez por dia ao iniciar e instala sozinho. Contacta o GitHub."
+            : "Busca uma vez por dia ao iniciar e avisa; a instalação pede a senha. Contacta o GitHub.";
+        AutoUpdateToggle.IsChecked = AppSettings.Current.AutoUpdate;
+        AutoUpdateToggle.IsCheckedChanged += (_, _) =>
+        {
+            AppSettings.Current.AutoUpdate = AutoUpdateToggle.IsChecked == true;
+            AppSettings.Current.Save();
+        };
+
+        UpdateDetail.Text = $"Versão instalada: {UpdateService.CurrentVersion}";
+        ShowUpdate(UpdateService.Available);
+        UpdateButton.Click += async (_, _) =>
+        {
+            UpdateButton.IsEnabled = false;
+            try
+            {
+                if (_pendingUpdate is { } update)
+                {
+                    UpdateStatus.Text = "Baixando e instalando…";
+                    if (await UpdateService.InstallAsync(update) is { } error)
+                    {
+                        UpdateStatus.Text = "Não foi possível atualizar";
+                        UpdateDetail.Text = error;
+                    }
+                    return;
+                }
+
+                UpdateStatus.Text = "Buscando…";
+                var result = await UpdateService.CheckAsync();
+                if (result.Error is not null)
+                {
+                    UpdateStatus.Text = "Não foi possível buscar";
+                    UpdateDetail.Text = result.Error;
+                }
+                else if (result.Update is null)
+                {
+                    UpdateStatus.Text = "Você está na versão mais recente";
+                    UpdateDetail.Text = $"Versão instalada: {UpdateService.CurrentVersion}";
+                }
+                else
+                    ShowUpdate(result.Update);
+            }
+            finally
+            {
+                UpdateButton.IsEnabled = true;
+            }
+        };
+    }
+
+    private UpdateInfo? _pendingUpdate;
+
+    private void ShowUpdate(UpdateInfo? update)
+    {
+        _pendingUpdate = update;
+        if (update is null)
+            return;
+        UpdateStatus.Text = $"Nova versão {update.Version} disponível";
+        UpdateDetail.Text = $"Instalada: {UpdateService.CurrentVersion}";
+        UpdateButton.Content = "Instalar";
     }
 
     // ───────────── Gravação do atalho global ─────────────

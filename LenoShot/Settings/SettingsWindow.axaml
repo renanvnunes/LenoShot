@@ -145,6 +145,30 @@
         </Border>
       </StackPanel>
 
+      <!-- Atualizações -->
+      <StackPanel>
+        <TextBlock Classes="section" Text="ATUALIZAÇÕES" />
+        <Border Classes="group">
+          <StackPanel>
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                <TextBlock Classes="label" Text="Atualizar automaticamente" />
+                <TextBlock Classes="hint" x:Name="AutoUpdateHint" TextWrapping="Wrap" />
+              </StackPanel>
+              <ToggleSwitch Grid.Column="1" x:Name="AutoUpdateToggle" VerticalAlignment="Center" />
+            </Grid>
+            <Rectangle Classes="sep" />
+            <Grid Classes="row" ColumnDefinitions="*,Auto">
+              <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                <TextBlock Classes="label" x:Name="UpdateStatus" Text="Buscar nova versão" />
+                <TextBlock Classes="hint" x:Name="UpdateDetail" TextWrapping="Wrap" />
+              </StackPanel>
+              <Button Grid.Column="1" Classes="pill" x:Name="UpdateButton" Content="Buscar" VerticalAlignment="Center" />
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
       <!-- Salvar -->
       <StackPanel>
         <TextBlock Classes="section" Text="SALVAR E COPIAR" />
