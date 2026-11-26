@@ -1,6 +1,6 @@
 # LenoShot
 
-Captura de tela minimalista para Linux (X11) e Windows. Selecione uma área, anote na hora e copie, salve ou grave em vídeo — tudo em uma única sobreposição, sem abrir um editor separado.
+Captura de tela minimalista para Linux (X11) e Windows 10/11. Selecione uma área, anote na hora e copie, salve ou grave em vídeo — tudo em uma única sobreposição, sem abrir um editor separado.
 
 Feito com [Avalonia](https://avaloniaui.net/) e .NET 10, compilado com Native AOT (inicia rápido e usa pouca memória).
 
@@ -32,6 +32,8 @@ Atalho de captura, atraso, pastas de destino (imagens e vídeos), quadros por se
 
 ## Instalação
 
+### Linux
+
 Gere o pacote `.deb` e instale:
 
 ```bash
@@ -40,6 +42,38 @@ sudo apt install ./dist/lenoshot_*_amd64.deb
 ```
 
 Dependências principais: `ffmpeg` e `pulseaudio-utils` (gravação), além de bibliotecas X11 (`libx11-6`, `libxtst6`, `libxinerama1`, ...), todas instaladas pelo `apt`.
+
+### Windows
+
+Gere o instalador `.exe` e instale:
+
+```powershell
+winget install JRSoftware.InnoSetup   # só na primeira vez
+powershell -ExecutionPolicy Bypass -File packaging/build-windows.ps1 -Installer -NoAot
+.\dist\LenoShot_0.4.3_win-x64-setup.exe
+```
+
+O instalador sai em `dist/LenoShot_<versão>_win-x64-setup.exe`, junto com uma pasta e um `.zip` (versão portátil: basta abrir o `LenoShot.exe`).
+
+Variações do comando:
+
+- **Sem `-NoAot`:** compila com Native AOT (executável menor e mais rápido), mas precisa das ferramentas de C++ do Visual Studio.
+- **Sem `-Installer`:** gera só a pasta e o `.zip`, sem o Inno Setup.
+- **Com `-NoFfmpeg`:** não inclui o ffmpeg (pacote bem menor, mas a gravação de tela depende de o usuário instalá-lo).
+
+O instalador não pede administrador (instala em `%LOCALAPPDATA%\Programs\LenoShot`), cria o atalho no menu Iniciar, oferece iniciar com o Windows e aparece em "Aplicativos instalados" com desinstalador. Ao atualizar ou desinstalar, ele fecha o LenoShot se estiver aberto. Aceita os parâmetros silenciosos do Inno Setup (`/VERYSILENT`, `/TASKS=autostart`).
+
+As ferramentas de C++ do Native AOT vêm com o Visual Studio (carga de trabalho "Desenvolvimento para desktop com C++"). Sem elas, `-NoAot` gera um executável único autocontido.
+
+O ícone do `.exe` e do instalador fica em `packaging/LenoShot.ico`. Se o desenho do ícone mudar, gere de novo com `LenoShot --export-ico packaging/LenoShot.ico`.
+
+O ffmpeg (usado na gravação de tela) já vai junto no instalador e no `.zip`: o script baixa o build "essentials" do [Gyan](https://www.gyan.dev/ffmpeg/builds/) uma vez, guarda em `dist/cache` e confere o SHA256. A licença dele (GPL) vai junto, como `ffmpeg-LICENSE.txt`. Com `-NoFfmpeg` ele fica de fora, e aí é preciso instalar à parte (`winget install Gyan.FFmpeg`).
+
+Diferenças no Windows:
+
+- O atalho **Print** funciona mesmo com a Ferramenta de Captura do Windows 11 ativada: o LenoShot fica com a tecla.
+- Os atalhos ficam nas configurações do app (`%APPDATA%\LenoShot\settings.json`), não no sistema.
+- O áudio do PC na gravação usa um dispositivo de loopback ("Mixagem estéreo" ou similar), que precisa estar ativado nas configurações de som. Sem ele, a gravação segue sem esse áudio, com um aviso.
 
 ## Uso pela linha de comando
 
@@ -63,7 +97,8 @@ dotnet run --project LenoShot
 
 ```
 LenoShot/     código do app (projeto Avalonia)
-packaging/    script que gera o .deb
+              Capture/Platform.cs escolhe X11 (Linux) ou Win32 (Windows)
+packaging/    scripts que geram o .deb e o pacote/instalador do Windows
 docs/images/  imagens deste README
 ```
 

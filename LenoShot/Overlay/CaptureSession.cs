@@ -23,9 +23,12 @@ public sealed class CaptureSession
 
     public static CaptureSession? Start()
     {
-        var full = X11Capture.CaptureRoot(out var pointer);
+        var full = ScreenCapture.CaptureAll(out var pointer, out var origin);
         if (full is null)
             return null;
+
+        // Área coberta pela imagem, em coordenadas globais (no Windows a origem pode ser negativa)
+        var fullRect = new PixelRect(origin, new PixelSize(full.Width, full.Height));
 
         var probe = new Window();
         var screens = probe.Screens.All;
@@ -33,15 +36,16 @@ public sealed class CaptureSession
 
         var monitors = screens.Count > 0
             ? screens.Select(s => (s.Bounds, s.Scaling))
-            : [(new PixelRect(0, 0, full.Width, full.Height), 1.0)];
+            : [(fullRect, 1.0)];
 
         foreach (var (bounds, scaling) in monitors)
         {
-            var clipped = bounds.Intersect(new PixelRect(0, 0, full.Width, full.Height));
+            var clipped = bounds.Intersect(fullRect);
             if (clipped.Width <= 0 || clipped.Height <= 0)
                 continue;
 
-            var image = new ScreenImage(clipped.Width, clipped.Height, CropPixels(full, clipped));
+            var inImage = new PixelRect(clipped.X - origin.X, clipped.Y - origin.Y, clipped.Width, clipped.Height);
+            var image = new ScreenImage(clipped.Width, clipped.Height, CropPixels(full, inImage));
             var window = new OverlayWindow(session, image, clipped, scaling);
             if (clipped.Contains(pointer))
                 session._windows.Insert(0, window); // o monitor com o mouse abre primeiro e recebe o foco

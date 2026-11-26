@@ -46,7 +46,7 @@ public partial class EditorWindow : ChromeWindow
         Opened += (_, _) =>
         {
             if (TryGetPlatformHandle() is { } handle)
-                X11Window.MoveResize(handle.Handle, rect);
+                PlatformWindow.MoveResize(handle.Handle, rect);
             Canvas.Focus();
         };
     }

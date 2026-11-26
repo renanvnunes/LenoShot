@@ -20,6 +20,14 @@ internal static class Program
             return 0;
         }
 
+        // Gera o ícone do Windows (.ico); usado para atualizar packaging/LenoShot.ico
+        if (args is ["--export-ico", var file])
+        {
+            BuildAvaloniaApp().SetupWithoutStarting();
+            SystemIntegration.ExportIco(file);
+            return 0;
+        }
+
         // Se já existe uma instância rodando, só repassa o comando e sai.
         if (SingleInstance.TrySendToRunningInstance(command))
             return 0;

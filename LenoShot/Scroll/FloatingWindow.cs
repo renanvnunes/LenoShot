@@ -8,7 +8,8 @@ namespace LenoShot.Scroll;
 
 /// <summary>
 /// Janela sem bordas, sempre por cima, posicionada em pixels exatos.
-/// O GNOME ignora a posição pedida antes de a janela abrir, então ela é aplicada depois via X11.
+/// O GNOME ignora a posição pedida antes de a janela abrir, então ela é aplicada depois direto
+/// no sistema (X11 ou Win32).
 /// </summary>
 public class FloatingWindow : Window
 {
@@ -24,7 +25,10 @@ public class FloatingWindow : Window
         WindowDecorations = WindowDecorations.None;
         Topmost = true;
         ShowInTaskbar = false;
-        CanResize = true; // o Mutter só move/redimensiona livremente janelas redimensionáveis
+        // O Mutter só move/redimensiona livremente janelas redimensionáveis. No Windows é o contrário:
+        // janela redimensionável ganha borda de redimensionar e tamanho mínimo, o que estragaria as
+        // faixas de 2 px da moldura.
+        CanResize = !OperatingSystem.IsWindows();
 
         // Template mínimo (só o conteúdo): o template padrão do Avalonia 12 desenha uma moldura
         // translúcida em volta, que aparece como uma "borda" em janelas transparentes.
@@ -36,7 +40,7 @@ public class FloatingWindow : Window
         }.RegisterInNameScope(scope));
         // Tipo "notificação": o GNOME e extensões (cantos arredondados, sombra) não mexem nela
         if (asNotification && TryGetPlatformHandle() is { } handle)
-            X11Window.SetWindowType(handle.Handle, "_NET_WM_WINDOW_TYPE_NOTIFICATION");
+            PlatformWindow.MarkAsNotification(handle.Handle);
 
         Opened += (_, _) => Apply();
     }
@@ -58,14 +62,14 @@ public class FloatingWindow : Window
     public void UseOverrideRedirect()
     {
         if (TryGetPlatformHandle() is { } handle)
-            X11Window.SetOverrideRedirect(handle.Handle);
+            PlatformWindow.SetOverrideRedirect(handle.Handle);
     }
 
     /// <summary>Foco do teclado para a janela (necessário em janelas override-redirect).</summary>
     public void FocusInput()
     {
         if (TryGetPlatformHandle() is { } handle)
-            X11Window.FocusInput(handle.Handle);
+            PlatformWindow.FocusInput(handle.Handle);
     }
 
     /// <summary>Posição e tamanho atuais em pixels (o que foi pedido com PlaceAt/MoveTo).</summary>
@@ -73,7 +77,7 @@ public class FloatingWindow : Window
 
     /// <summary>Onde a janela realmente está na tela agora (pode diferir do pedido), ou null se não abriu.</summary>
     public PixelRect? ActualRect() =>
-        IsVisible && TryGetPlatformHandle() is { } handle ? X11Window.GetRect(handle.Handle) : null;
+        IsVisible && TryGetPlatformHandle() is { } handle ? PlatformWindow.GetRect(handle.Handle) : null;
 
     /// <summary>Move a janela (sem mudar o tamanho).</summary>
     public void MoveTo(PixelPoint position)
@@ -87,6 +91,6 @@ public class FloatingWindow : Window
     private void Apply()
     {
         if (TryGetPlatformHandle() is { } handle)
-            X11Window.MoveResize(handle.Handle, _target);
+            PlatformWindow.MoveResize(handle.Handle, _target);
     }
 }

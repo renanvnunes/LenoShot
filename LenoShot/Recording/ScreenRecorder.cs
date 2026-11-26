@@ -14,7 +14,8 @@ public enum RecordFormat
 }
 
 /// <summary>
-/// Grava uma área da tela com o ffmpeg (x11grab), com microfone e/ou áudio do computador.
+/// Grava uma área da tela com o ffmpeg (x11grab no Linux, gdigrab no Windows), com microfone
+/// e/ou áudio do computador (PulseAudio no Linux, DirectShow no Windows).
 /// A pausa funciona gravando em segmentos: pausar encerra o segmento atual, continuar abre
 /// outro, e ao parar tudo é emendado num único arquivo. MP4 é emendado sem recodificar;
 /// WebM (VP9/Opus) e GIF são convertidos a partir dos segmentos no final.
@@ -88,12 +89,43 @@ public sealed class ScreenRecorder
     /// <summary>Últimas linhas de erro do ffmpeg, para mostrar ao usuário.</summary>
     public string LastLog => _log.ToString().Trim();
 
-    public static bool IsFfmpegAvailable()
+    public static bool IsFfmpegAvailable() => FindFfmpeg() is not null;
+
+    /// <summary>
+    /// Caminho do ffmpeg: ao lado do app (no Windows dá para colocar o ffmpeg.exe junto) ou no PATH.
+    /// No Windows também lê o PATH atual do registro, para achar um ffmpeg instalado (ex.: pelo
+    /// winget) depois que o app já estava aberto.
+    /// </summary>
+    private static string? FindFfmpeg()
     {
-        var path = Environment.GetEnvironmentVariable("PATH") ?? "";
-        return path.Split(':', StringSplitOptions.RemoveEmptyEntries)
-            .Any(dir => File.Exists(Path.Combine(dir, "ffmpeg")));
+        var exe = OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg";
+        var dirs = new List<string> { AppContext.BaseDirectory };
+        dirs.AddRange(SplitPath(Environment.GetEnvironmentVariable("PATH")));
+        if (OperatingSystem.IsWindows())
+        {
+            dirs.AddRange(SplitPath(Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.User)));
+            dirs.AddRange(SplitPath(Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Machine)));
+        }
+
+        foreach (var dir in dirs)
+        {
+            try
+            {
+                var candidate = Path.Combine(Environment.ExpandEnvironmentVariables(dir), exe);
+                if (File.Exists(candidate))
+                    return candidate;
+            }
+            catch (ArgumentException)
+            {
+                // entrada inválida no PATH
+            }
+        }
+        return null;
     }
+
+    private static IEnumerable<string> SplitPath(string? path) =>
+        (path ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(dir => dir.Trim('"'));
 
     // ───────────── Controle ─────────────
 
@@ -150,7 +182,8 @@ public sealed class ScreenRecorder
             var output = Path.Combine(dir, $"LenoShot_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.{Extension(Format)}");
 
             var list = Path.Combine(_tempDir, "list.txt");
-            await File.WriteAllLinesAsync(list, valid.Select(f => $"file '{f.Replace("'", "'\\''")}'"));
+            // Barras normais: o ffmpeg aceita também no Windows e evita escapes
+            await File.WriteAllLinesAsync(list, valid.Select(f => $"file '{f.Replace('\\', '/').Replace("'", "'\\''")}'"));
 
             var args = new List<string> { "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", list };
             if (MaxDuration is { } max)
@@ -208,13 +241,23 @@ public sealed class ScreenRecorder
         var file = Path.Combine(_tempDir, $"seg{_segments.Count:000}.mkv");
         _log.Clear();
 
-        var display = Environment.GetEnvironmentVariable("DISPLAY") ?? ":0";
         var args = new List<string> { "-y", "-loglevel", "warning" };
 
         // Entrada 0: vídeo
-        args.AddRange(["-thread_queue_size", "1024", "-f", "x11grab", "-framerate", _fps.ToString(),
-            "-video_size", $"{_area.Width}x{_area.Height}", "-draw_mouse", "1",
-            "-i", $"{display}+{_area.X},{_area.Y}"]);
+        if (OperatingSystem.IsWindows())
+        {
+            // gdigrab: as coordenadas são da área de trabalho virtual (podem ser negativas)
+            args.AddRange(["-thread_queue_size", "1024", "-f", "gdigrab", "-framerate", _fps.ToString(),
+                "-offset_x", _area.X.ToString(), "-offset_y", _area.Y.ToString(),
+                "-video_size", $"{_area.Width}x{_area.Height}", "-draw_mouse", "1", "-i", "desktop"]);
+        }
+        else
+        {
+            var display = Environment.GetEnvironmentVariable("DISPLAY") ?? ":0";
+            args.AddRange(["-thread_queue_size", "1024", "-f", "x11grab", "-framerate", _fps.ToString(),
+                "-video_size", $"{_area.Width}x{_area.Height}", "-draw_mouse", "1",
+                "-i", $"{display}+{_area.X},{_area.Y}"]);
+        }
 
         // Entradas seguintes: áudio (microfone e/ou o que sai nas caixas)
         var audio = 0;
@@ -222,7 +265,10 @@ public sealed class ScreenRecorder
         {
             if (source is null)
                 continue;
-            args.AddRange(["-thread_queue_size", "1024", "-f", "pulse", "-i", source]);
+            if (OperatingSystem.IsWindows())
+                args.AddRange(["-thread_queue_size", "1024", "-f", "dshow", "-audio_buffer_size", "50", "-i", $"audio={source}"]);
+            else
+                args.AddRange(["-thread_queue_size", "1024", "-f", "pulse", "-i", source]);
             audio++;
         }
 
@@ -301,9 +347,10 @@ public sealed class ScreenRecorder
     {
         try
         {
-            var psi = new ProcessStartInfo("ffmpeg")
+            var psi = new ProcessStartInfo(FindFfmpeg() ?? "ffmpeg")
             {
                 UseShellExecute = false,
+                CreateNoWindow = true, // no Windows, sem isso abre uma janela de console
                 RedirectStandardInput = redirectInput,
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
@@ -355,6 +402,12 @@ public sealed class ScreenRecorder
 
     private async Task ResolveAudioSourcesAsync()
     {
+        if (OperatingSystem.IsWindows())
+        {
+            await ResolveWindowsAudioSourcesAsync();
+            return;
+        }
+
         if (_mic)
         {
             _micSource = (await SystemIntegration.RunAsync("pactl", ["get-default-source"]))?.Trim();
@@ -373,6 +426,91 @@ public sealed class ScreenRecorder
             else
                 _systemSource = sink + ".monitor";
         }
+    }
+
+    // Dispositivos DirectShow que entregam o que sai nas caixas (precisam estar ativados no Windows)
+    private static readonly string[] LoopbackNames =
+        ["stereo mix", "mixagem estéreo", "mixagem estereo", "mixage stéréo", "mezcla estéreo",
+         "stereomix", "what u hear", "wave out", "virtual-audio-capturer", "cable output"];
+
+    private static bool IsLoopback(string device) =>
+        LoopbackNames.Any(n => device.Contains(n, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// No Windows o áudio vem do DirectShow: o microfone é o primeiro dispositivo de entrada; o
+    /// áudio do computador precisa de um dispositivo de loopback ("Mixagem estéreo" ou similar).
+    /// </summary>
+    private async Task ResolveWindowsAudioSourcesAsync()
+    {
+        if (!_mic && !_system)
+            return;
+
+        var devices = await ListDirectShowAudioDevicesAsync();
+        if (_mic)
+        {
+            _micSource = devices.FirstOrDefault(d => !IsLoopback(d));
+            if (_micSource is null)
+                Warning = "Microfone não encontrado — gravando sem ele.";
+        }
+
+        if (_system)
+        {
+            _systemSource = devices.FirstOrDefault(IsLoopback);
+            if (_systemSource is null)
+                Warning = (Warning is null ? "" : Warning + " ") +
+                          "Áudio do PC indisponível: ative a \"Mixagem estéreo\" no Windows — gravando sem ele.";
+        }
+    }
+
+    /// <summary>Nomes dos dispositivos de áudio do DirectShow, como o ffmpeg os lista.</summary>
+    private static async Task<List<string>> ListDirectShowAudioDevicesAsync()
+    {
+        var devices = new List<string>();
+        try
+        {
+            var psi = new ProcessStartInfo(FindFfmpeg() ?? "ffmpeg")
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+            };
+            foreach (var arg in new[] { "-hide_banner", "-list_devices", "true", "-f", "dshow", "-i", "dummy" })
+                psi.ArgumentList.Add(arg);
+
+            using var process = Process.Start(psi);
+            if (process is null)
+                return devices;
+            var stdout = process.StandardOutput.ReadToEndAsync();
+            var output = await process.StandardError.ReadToEndAsync();
+            await stdout;
+            await process.WaitForExitAsync();
+
+            // Formato novo: [dshow @ ...] "Nome" (audio)
+            // Formato antigo: uma seção "DirectShow audio devices" seguida de [dshow @ ...]  "Nome"
+            var inAudioSection = false;
+            foreach (var line in output.Split('\n'))
+            {
+                if (line.Contains("DirectShow audio devices", StringComparison.OrdinalIgnoreCase))
+                    inAudioSection = true;
+                else if (line.Contains("DirectShow video devices", StringComparison.OrdinalIgnoreCase))
+                    inAudioSection = false;
+
+                if (line.Contains("Alternative name", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                var start = line.IndexOf('"');
+                var end = line.LastIndexOf('"');
+                if (start < 0 || end <= start)
+                    continue;
+                if (line.Contains("(audio)", StringComparison.Ordinal) || (inAudioSection && !line.Contains("(video)")))
+                    devices.Add(line[(start + 1)..end]);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[LenoShot] não foi possível listar os dispositivos de áudio: {ex.Message}");
+        }
+        return devices;
     }
 
     private void Cleanup()

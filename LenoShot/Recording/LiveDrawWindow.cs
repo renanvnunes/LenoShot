@@ -61,7 +61,7 @@ public sealed class LiveDrawWindow : FloatingWindow
         if (on)
         {
             // Congela o que está na área agora, antes de a janela aparecer
-            var snapshot = X11Capture.CaptureRect(_area);
+            var snapshot = ScreenCapture.CaptureRect(_area);
             if (snapshot is null)
                 return;
 
