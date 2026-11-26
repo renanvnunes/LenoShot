@@ -21,10 +21,11 @@ jobs:
 
       # Native AOT precisa de clang e zlib para linkar
       - name: Dependências de build
-        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+        # xvfb: o --export-icons do app inicializa o Avalonia e precisa de um display X11
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev xvfb
 
       - name: Gerar .deb
-        run: packaging/build-deb.sh
+        run: xvfb-run -a packaging/build-deb.sh
 
       - uses: actions/upload-artifact@v4
         with:
