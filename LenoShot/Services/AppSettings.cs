@@ -47,6 +47,9 @@ public sealed class AppSettings
     /// <summary>Atalho do zoom na gravação; vazio = nenhum.</summary>
     public string? ZoomShortcut { get; set; }
 
+    /// <summary>Linux: o atalho padrão (Print) já foi aplicado uma vez; depois disso vale a escolha do usuário.</summary>
+    public bool LinuxShortcutInitialized { get; set; }
+
     // ───────────── Persistência ─────────────
 
     private static readonly string FilePath = Path.Combine(

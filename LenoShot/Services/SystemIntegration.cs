@@ -422,6 +422,79 @@ public static class SystemIntegration
         return true;
     }
 
+    /// <summary>
+    /// Linux (GNOME): na primeira execução assume a tecla Print para a captura, mesmo que outro
+    /// programa (inclusive o atalho de captura do próprio GNOME) já a use. Também remove entradas de
+    /// atalho de versões antigas, que ficavam em "leno-shot/" e continuavam presas à tecla.
+    /// Depois da primeira vez a escolha do usuário é respeitada.
+    /// </summary>
+    public static async Task EnsureLinuxDefaultShortcutAsync()
+    {
+        if (OperatingSystem.IsWindows() || await Run("gsettings", ["list-schemas"]) is not { } schemas
+            || !schemas.Contains(KeybindingsSchema))
+            return;
+
+        await RemoveLegacyShortcutsAsync();
+
+        if (AppSettings.Current.LinuxShortcutInitialized)
+            return;
+
+        await FreeKeyAsync("Print");
+        if (await SetShortcutAsync("Print", ShortcutSlot.Capture))
+        {
+            AppSettings.Current.LinuxShortcutInitialized = true;
+            AppSettings.Current.Save();
+        }
+    }
+
+    private static List<string> ParseStringList(string? gsettingsOutput) =>
+        System.Text.RegularExpressions.Regex.Matches(gsettingsOutput ?? "", "'([^']*)'").Select(m => m.Groups[1].Value).ToList();
+
+    private static Task SetStringList(string schema, string key, IEnumerable<string> items) =>
+        Run("gsettings", ["set", schema, key, $"[{string.Join(", ", items.Select(i => $"'{i}'"))}]"]);
+
+    private static async Task RemoveLegacyShortcutsAsync()
+    {
+        var all = ParseStringList(await Run("gsettings", ["get", KeybindingsSchema, "custom-keybindings"]));
+        var legacy = all.Where(p => p.EndsWith("/leno-shot/") || p.EndsWith("/leno-shot-zoom/")).ToList();
+        if (legacy.Count == 0)
+            return;
+
+        foreach (var path in legacy)
+            await Run("gsettings", ["set", $"{KeybindingsSchema}.custom-keybinding:{path}", "binding", ""]);
+        await SetStringList(KeybindingsSchema, "custom-keybindings", all.Except(legacy));
+    }
+
+    /// <summary>Solta o atalho (ex.: "Print") dos atalhos do GNOME e de outros atalhos personalizados.</summary>
+    private static async Task FreeKeyAsync(string accelerator)
+    {
+        // Atalhos nativos de captura do GNOME (só os que existem nesta versão)
+        foreach (var (schema, keys) in new[]
+        {
+            ("org.gnome.shell.keybindings", new[] { "show-screenshot-ui", "screenshot", "screenshot-window" }),
+            (KeybindingsSchema, new[] { "screenshot", "window-screenshot", "area-screenshot" }),
+        })
+        {
+            var existing = (await Run("gsettings", ["list-keys", schema]) ?? "")
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            foreach (var key in keys.Where(existing.Contains))
+            {
+                var bindings = ParseStringList(await Run("gsettings", ["get", schema, key]));
+                if (bindings.Contains(accelerator))
+                    await SetStringList(schema, key, bindings.Where(b => b != accelerator));
+            }
+        }
+
+        // Atalhos personalizados de outros programas na mesma tecla
+        var ours = new[] { SlotPath(ShortcutSlot.Capture), SlotPath(ShortcutSlot.Zoom) };
+        foreach (var path in ParseStringList(await Run("gsettings", ["get", KeybindingsSchema, "custom-keybindings"])).Except(ours))
+        {
+            var schema = $"{KeybindingsSchema}.custom-keybinding:{path}";
+            if ((await Run("gsettings", ["get", schema, "binding"]))?.Trim().Trim('\'') == accelerator)
+                await Run("gsettings", ["set", schema, "binding", ""]);
+        }
+    }
+
     /// <summary>Guarda o atalho escolhido (no Windows; no Linux o GNOME já guarda).</summary>
     public static void SaveShortcut(string? accelerator, ShortcutSlot slot)
     {
