@@ -21,13 +21,17 @@
           </Style>
         </Ellipse.Styles>
       </Ellipse>
-      <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
-        <TextBlock x:Name="StatusText" Text="Rolando a página…" FontSize="13" FontWeight="Light" Foreground="#F5F5F7" />
-        <TextBlock x:Name="DetailText" Text="Tire o mouse da área para pausar" FontSize="11" Foreground="#8E8E93" />
+      <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1" ClipToBounds="True">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock x:Name="StatusText" Text="Rolando a página…" FontSize="13" FontWeight="Light" Foreground="#F5F5F7" TextTrimming="CharacterEllipsis" />
+          <TextBlock x:Name="PercentText" Grid.Column="1" Text="0%" FontSize="12" Foreground="#F5F5F7" />
+        </Grid>
+        <ProgressBar x:Name="Progress" Minimum="0" Maximum="100" Value="0" Height="3" MinHeight="3" ShowProgressText="False" Margin="0,1" />
+        <TextBlock x:Name="DetailText" Text="Clique em Parar para finalizar" FontSize="11" Foreground="#8E8E93" TextTrimming="CharacterEllipsis" />
       </StackPanel>
       <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="12,0,0,0">
         <Button x:Name="CancelButton" Classes="pill" Content="Cancelar" />
-        <Button x:Name="DoneButton" Classes="pill primary" Content="Concluir" />
+        <Button x:Name="DoneButton" Classes="pill primary" Content="Parar" />
       </StackPanel>
     </Grid>
   </Border>

@@ -14,10 +14,12 @@ public partial class ScrollPanel : FloatingWindow
         CancelButton.Click += (_, _) => CancelRequested?.Invoke(this, EventArgs.Empty);
     }
 
-    public void SetStatus(string status, string detail)
+    public void SetStatus(string status, string detail, int percent = 0)
     {
         StatusText.Text = status;
         DetailText.Text = detail;
+        PercentText.Text = $"{percent}%";
+        Progress.Value = percent;
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
